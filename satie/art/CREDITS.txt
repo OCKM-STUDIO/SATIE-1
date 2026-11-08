@@ -1,0 +1,16 @@
+SATIE-1 — Erik. Evolved.
+
+Cover: AI-assisted design made with the built-in imagegen tool, based on the
+user-supplied historical photograph of Erik Satie. Final prompt: PROMPTS.txt.
+Master artwork: SATIE-1-Erik-Evolved.png.
+Portal derivative: card.jpg (square JPEG, <=1024 px and <300 KB).
+Startup derivative: startup.png (240 x 240); encoded by ../gen_art.py.
+
+Reference photograph: Henri Manuel, portrait of Erik Satie, circa 1920.
+Matching 500 x 700 reproduction and provenance:
+https://commons.wikimedia.org/wiki/File:Ericsatie.jpg
+Wikimedia Commons identifies the photograph as public domain.
+The input is the user's supplied 'Erik Satie.jpg'; no recordings are used.
+
+The earlier SATIE-1-cover.png is a superseded design and is not used by the
+firmware, preview or distribution package.

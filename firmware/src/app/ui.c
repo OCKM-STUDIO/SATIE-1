@@ -35,6 +35,12 @@
  * at once (store_now: playing, the music hushes around the write); the theme, Tune and MIDI out two
  * seconds after a change. */
 #include "../dsp/fastmath.h"
+#ifdef EN_SATIE1
+static void satie_input(void);
+static void satie_ui_tick(void);
+static void satie_draw(void);
+static void satie_ui_init(void);
+#endif
 
 /* --------------------------------------------------------------- pages --- */
 enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_PROG, V_DRONE, V_DRENV, V_DRLFO, V_DRBASS, V_ACID, V_ACENV, V_ACLINE, V_ACANS, V_ACSTEP, V_CMEL, V_CMEL2, V_CMVU, V_CMSTEP,
@@ -3365,6 +3371,10 @@ static void runner_start(void);
 
 static void input(void)
 {
+#ifdef EN_SATIE1
+    satie_input();
+    return;
+#endif
     uint32_t btn = plat_buttons(), keys = plat_keys(), ch, i;
     int32_t e;
     if (runner_on()) {                           /* the secret: the game has the panel */
@@ -7319,6 +7329,10 @@ static void splash_tick(void)                    /* the HYP-1 card's steps, fill
     plat_leds(n ? 1u << B_PLAY : 0u, k);
 }
 
+#ifdef EN_SATIE1
+#include "satie_ui.inc"
+#endif
+
 void ui_init(void)
 {
     if (rm.on)
@@ -7355,8 +7369,15 @@ void ui_init(void)
     ui.theme = (uint8_t)proj.par[P_THEME];
     th = &THEMES[ui.theme < EN_NTHEME ? ui.theme : 0];
     ui.splash = ui_splash_ms > 0u;
+#ifdef EN_SATIE1
+    satie_ui_init();
+#endif
     if (ui.splash) {
+#ifdef EN_SATIE1
+        satie_startup_draw();
+#else
         draw_splash();
+#endif
     } else {
         lcd_fill(0, 0, 240, 240, K_BG);
         if (!en_playing)
@@ -7369,7 +7390,9 @@ void ui_frame(void)
     if (ui.splash) {
         uint32_t held = plat_buttons() | plat_keys();
         if (plat_ms() - ui.boot_t < ui_splash_ms && !held) {
+#ifndef EN_SATIE1
             splash_tick();
+#endif
             return;
         }
         ui.splash = 0;                           /* the cards' time is up (or skipped): the UI, and the music */
@@ -7377,6 +7400,9 @@ void ui_frame(void)
         ui.keys = plat_keys();
         ui.btn_used = ui.btn;
         ui.shift_keys = ui.keys;
+#ifdef EN_SATIE1
+        satie_ui.buttons = ui.btn;
+#endif
         lcd_fill(0, 0, 240, 240, K_BG);
         if (!en_playing)
             en_play(1);
@@ -7409,6 +7435,9 @@ void ui_frame(void)
         }
     }
     input();
+#ifdef EN_SATIE1
+    satie_ui_tick();
+#endif
     scene_tick();
     dj_tick();
     af_tick();
@@ -7460,7 +7489,14 @@ void ui_frame(void)
             ui.jam_man = (uint8_t)want;
         }
     }
+#ifndef EN_SATIE1
     autosave();
+#endif
+#ifdef EN_SATIE1
+    satie_draw();
+    ui.frame++;
+    return;
+#endif
     if (kr.on) {                                 /* the secret: the whole screen, twenty frames a second */
         runner_update();
         if (ui.frame % 3u == 0u) {

@@ -77,6 +77,37 @@ __attribute__((used, visibility("default"))) void web_store_set_len(uint32_t obj
 }
 __attribute__((used, visibility("default"))) uint32_t web_store_writes(void) { return store_writes; }
 __attribute__((used, visibility("default"))) uint32_t web_nobj(void) { return OBJ_NOBJ; }
+#ifdef EN_SATIE1
+static uint16_t satie_web_state[28];
+__attribute__((used, visibility("default"))) uint16_t *web_satie_state(void)
+{
+    satie_web_state[0] = satie_ui.current.mood;
+    satie_web_state[1] = satie_ui.current.source;
+    satie_web_state[2] = satie_ui.current.tempo;
+    satie_web_state[3] = satie_ui.current.energy;
+    satie_web_state[4] = satie_ui.current.evolve;
+    satie_web_state[5] = satie_ui.current.space;
+    satie_web_state[6] = en_satie_seed;
+    satie_web_state[7] = en_satie_section;
+    satie_web_state[8] = en_playing;
+    satie_web_state[9] = en_frozen;
+    satie_web_state[10] = satie_ui.pending;
+    satie_web_state[11] = en_satie_step;
+    satie_web_state[12] = en_satie_voices;
+    satie_web_state[13] = en_satie_length;
+    satie_web_state[14] = satie_ui.browser;
+    satie_web_state[15] = 0 /* single composer */;
+    satie_web_state[16] = satie_ui.browser_collection;
+    satie_web_state[17] = satie_ui.browser_cursor;
+    satie_web_state[18] = satie_ui.page;
+    for (int k = 0; k < 4; k++) {
+        satie_web_state[19+k] = satie_knob_value(satie_ui.page,k);
+        satie_web_state[23+k] = satie_knob_max(satie_ui.page,k);
+    }
+    satie_web_state[27] = satie_ui.help;
+    return satie_web_state;
+}
+#endif
 __attribute__((used, visibility("default"))) uint32_t web_store_max(void) { return PLAT_STORE_MAX; }
 
 static float bg_out[12];                         /* for the stream view's background: what the screen shows */

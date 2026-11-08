@@ -1,0 +1,33 @@
+SATIE-1 — OCKM Studio — The Firmware Hub preparation
+====================================================
+Repository: https://github.com/OCKM-STUDIO/SATIE-1
+Beta tag: v0.1.0-beta
+Target: https://thefirmwarehub.com/submit/
+Requirements checked 2026-11-08 against the submission page and fmhub.md.
+
+BETA RELEASE
+- SATIE-1 0.1.0-beta firmware package, with update loader.
+- Public source and licences at the matching release tag, plus a source ZIP.
+- Identity FM-1_9980100: no exact or pattern match among the catalogue's 161
+  firmwares on 2026-11-08. Not a reservation or confirmed Hub listing.
+- fmhub.json: OCKM Studio author, description, groove category, lavender accent.
+- Card: 1024-square JPEG under 300 KB; master PNG and 240-square startup art.
+- Self-contained listening preview and quick-start guide.
+- GPL-3.0-only firmware code with upstream notices; separate score/art credits.
+- Tag-triggered release workflow uses the Hub's shared build workflow.
+  Check the actual Actions run and attestations for any downloaded firmware;
+  a locally built package does not acquire an attestation by being uploaded.
+
+BEFORE A HUB SUBMISSION
+This exact beta needs testing on a real FM-1: listen to Ibiza Chill with Colour
+Clean, check Keep/Recall after power-off, install from V15 and from another
+custom firmware, then install another firmware from SATIE-1 again.
+Previous builds were installed by the maker, but that is not evidence that
+this exact beta passed all those routes. The new UC25HQ80 flash ID is recognised
+in software; hardware testing of that chip is still outstanding.
+
+After these checks, use the Hub's submission page to contact its maintainer
+with the firmware name, OCKM Studio author name, repository/release link,
+identity, licence, and the hardware checks actually completed.
+The GitHub beta is for testing; it is not a claimed Hub-approved or fully
+hardware-validated release. No Hub submission has been sent.

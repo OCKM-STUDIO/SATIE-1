@@ -1,0 +1,70 @@
+SATIE-1 SOURCE NOTES
+====================
+Erik Satie. Ten complete exported scores, reduced to lead, bass and inner voice.
+The original MIDI/LilyPond editions are retained in sources/. source-notes.json
+records their SHA-256 hashes and all reduced notes. No recordings are embedded.
+
+Reduction: highest new right-staff note per sixteenth; lowest active left-staff
+note each quarter; second-highest active pitch as an optional inner voice.
+The original quarter-note timing is retained, rounded to sixteenths and padded
+to 4/4 bars. This simplifies durations, chords, ornaments and source metre.
+Evolve makes optional register/rhythmic changes. Hold loops eight dance bars.
+
+Gymnopedie editions: public domain, engraved by Evin Robertson.
+Gnossienne editions/adapted note data: CC BY-SA 4.0, original notices retained.
+https://creativecommons.org/licenses/by-sa/4.0/
+Ogive MIDI editions: David Cooke, explicitly released into the public domain
+for copying and adaptation. Source pages and original URLs are in the matching
+sources/ogive_N.json files and below. The sequencer uses right and left staves
+on channels 0 and 1; embedded tempo changes are replaced by the chosen tempo.
+
+GYMNOPEDIE 1 — Evin Robertson — Public Domain
+https://www.mutopiaproject.org/ftp/SatieE/gymnopedie_1/
+File: sources/gymnopedie_1.mid
+SHA-256: 09ce7337b4bf42ba12e1aa64b4c7dc7fcfa6455f1070cb12f8880a755df97384
+
+GYMNOPEDIE 2 — Evin Robertson — Public Domain
+https://www.mutopiaproject.org/ftp/SatieE/gymnopedie_2/
+File: sources/gymnopedie_2.mid
+SHA-256: 02e8ae8d7e1f6073f12f62a61a63cf07b260a1cf49f4a9008ee4e3f8e1934d30
+
+GYMNOPEDIE 3 — Evin Robertson — Public Domain
+https://www.mutopiaproject.org/ftp/SatieE/gymnopedie_3/
+File: sources/gymnopedie_3.mid
+SHA-256: fd1dceff4da08e997b083acc5b571bebe980bc89421b75b052dbb93ecf06ca23
+
+GNOSSIENNE 1 — Knute Snortum — CC-BY-SA-4.0
+https://www.mutopiaproject.org/ftp/SatieE/Gnossienne/no_1/
+File: sources/gnossienne_1.mid
+SHA-256: f49fc6c6653295e09350d64479d09b4c31091aa5dade81f2494383ab7e71708a
+
+GNOSSIENNE 2 — Frédéric Duperray — CC-BY-SA-4.0
+https://www.mutopiaproject.org/ftp/SatieE/Gnossienne/no_2/
+File: sources/gnossienne_2.mid
+SHA-256: 31093d734a6c526cc285f8d9cd06cbf6f69d345355e3e7c29a42dc344511b092
+
+GNOSSIENNE 3 — Frédéric Duperray — CC-BY-SA-4.0
+https://www.mutopiaproject.org/ftp/SatieE/Gnossienne/no_3/
+File: sources/gnossienne_3.mid
+SHA-256: 0f5f7eee5d30ae6b44aff73e5fdd3181223ddf36151f37369753c8ccbb53bedc
+
+OGIVE 1 — David Cooke — Public Domain
+https://commons.wikimedia.org/wiki/File:Erik_Satie_-_Ogive_No.1.mid
+File: sources/ogive_1.mid
+SHA-256: c5d04b51aa56c0cf62da44035aa08df8d0eaed4d52878435cbef1c737387d8bf
+
+OGIVE 2 — David Cooke — Public Domain
+https://commons.wikimedia.org/wiki/File:Erik_Satie_-_Ogive_No.2.mid
+File: sources/ogive_2.mid
+SHA-256: a933c5f998227996840261caa9e152e0834633feb4374deea22733b61259ebe0
+
+OGIVE 3 — David Cooke — Public Domain
+https://commons.wikimedia.org/wiki/File:Erik_Satie_-_Ogive_No.3.mid
+File: sources/ogive_3.mid
+SHA-256: 3ba1ab719d3cbce80702726bf26ff2702059859d5646112eec7c6177352b881b
+
+OGIVE 4 — David Cooke — Public Domain
+https://commons.wikimedia.org/wiki/File:Erik_Satie_-_Ogive_No.4.mid
+File: sources/ogive_4.mid
+SHA-256: 76605c9104fc7080af20cf648c2f91bc8d3737e1e9b00dbadd22d4bb91aa6ddc
+

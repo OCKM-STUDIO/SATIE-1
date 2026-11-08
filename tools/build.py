@@ -200,7 +200,7 @@ def build_loader():
 def build_app():
     os.environ.setdefault("EN_CORE2", "1")      # the reverb on the second core (fallback to one core built in); EN_CORE2=0 for single core
     flags = [*CFLAGS, *FPU, "-Ifirmware/hal", "-Ifirmware/src", "-Ibuild/gen"]
-    for flag in ("EN_CDC", "EN_CORE2", "EN_DIAG"):
+    for flag in ("EN_CDC", "EN_CORE2", "EN_DIAG", "EN_SATIE1"):
         v = os.environ.get(flag)    # unset: the default in firmware/src/main.c (EN_DIAG: firmware/src/dsp/amb.h)
         if v in ("0", "1"):
             flags.append(f"-D{flag}={v}")
@@ -359,6 +359,10 @@ def main():
         PRODUCT = "FM-1_7%02d%02d%02d" % (int(m[1]), int(m[2]), int(m[3] or 0))
         VERSION = a.release.upper()
         name = f"amb-{a.release}.fwsc"
+    if os.environ.get("EN_SATIE1") == "1":
+        PRODUCT = "FM-1_9980100"  # SATIE-1; checked against the Hub catalogue, 2026-11-08
+        VERSION = "SATIE-1 " + (a.release.upper() if a.release else "DEV")
+        name = f"satie-1-{a.release}.fwsc" if a.release else "satie-1-dev.fwsc"
     fm1pkg_make.SDK = a.sdk
     for rel, sha in SDK_SHA256.items():          # fail early without the SDK
         if hashlib.sha256(fm1pkg_make.sdk_file(rel)).hexdigest() != sha:

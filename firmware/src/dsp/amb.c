@@ -2,6 +2,25 @@
 /* The instrument (amb.h). One compilation unit, -O2. */
 #include "amb.h"
 #include "fastmath.h"
+#ifdef EN_SATIE1
+#include "satie_data.h"
+#include "satie_data.inc"
+static void satie_step(void);
+static void satie_start(int source, unsigned seed);
+static void satie_reset(void);
+static float satie_inner_gain;
+static uint8_t satie_inner_trigger;
+static float satie_edit[ST_NEDIT], satie_target[ST_NEDIT];
+static float satie_lead_low[2], satie_drum_low[2];
+#define SE(i) (satie_edit[i] * 0.01f)
+/* A neutral-at-50 tilt, with bounded high lift. */
+static float satie_tilt(float x, float *low, float tone, float k)
+{
+    *low += k * (x - *low);
+    return tone < 0.5f ? x + (1.0f - 2.0f*tone) * (*low-x) :
+        x + (tone-0.5f) * (x-*low);
+}
+#endif
 
 #ifdef EN_HOST
 #define EN_POOL
@@ -23,7 +42,12 @@ const char *const EN_LANE_NAME[EN_NLANE] = {"Kick", "Snare", "Clap", "Hat", "Ope
 static const en_param_t PARAMS[P_NPARAMS] = {
     [P_PAD] = {"Pad", 0, 100, 45},          [P_ACID] = {"Acid", 0, 100, 55},       [P_BASS] = {"Bass", 0, 100, 65},
     [P_PULSE] = {"Drums", 0, 100, 75},      [P_NOISE] = {"Vinyl", 0, 100, 20},
-    [P_TEMPO] = {"Tempo", 70, 190, 128},   [P_EVOLVE] = {"Evolve", 0, 100, 40},   [P_MOTION] = {"Motion", 0, 100, 60},
+#ifdef EN_SATIE1
+    [P_TEMPO] = {"Tempo", 50, 190, 118},
+#else
+    [P_TEMPO] = {"Tempo", 70, 190, 128},
+#endif
+    [P_EVOLVE] = {"Evolve", 0, 100, 40},   [P_MOTION] = {"Motion", 0, 100, 60},
     [P_DRIFT] = {"Drift", 0, 100, 60},
     [P_BRIGHT] = {"Bright", 0, 100, 35},    [P_PADTONE] = {"Sound", 0, EN_NSOUND - 1, 1},     [P_DETUNE] = {"Detune", 0, 100, 30},
     [P_PE_ATK] = {"Attack", 0, 100, 45},    [P_PE_HOLD] = {"Hold", 0, 100, 35},    [P_PE_REL] = {"Release", 0, 100, 55},
@@ -588,7 +612,11 @@ const char *const EN_ACID_SOUND[EN_NACID] = {"Saw", "Square", "Driven", "Sync", 
                                               "Marimba", "E.Piano", "Kalimba", "Brass", "Gong", "Clav", "Vibes", "Digital",
                                               "Super", "CZ", "Mini", "Hyper", "CZ Pulse", "CZ Bell", "Lead"};
 const char *const EN_KIT_NAME[EN_NKIT] = {"Hypno", "House", "Techno", "Acid", "Break", "Minimal", "Hard", "808", "Dusty", "Heavy",
-                                                   "909", "Electro", "DnB", "Trap"};
+                                                   "909", "Electro", "DnB", "Trap"
+#ifdef EN_SATIE1
+                                                   , "Brushes"
+#endif
+};
 
 /* the envelopes' times, from their knobs (0..100), in seconds */
 static float pe_atk_s(int v) { return 0.05f * fm_exp2f((float)v * 0.0764f); }        /* 0.05 .. 10 s */
@@ -966,6 +994,12 @@ out:
 /* ------------------------------------------------------------ commands --- */
 enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_PROGK, C_MAP, C_DTAP, C_DEG, C_BEND };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
+#ifdef EN_SATIE1
+#define C_SATIE 100
+#define C_SATIE_VOICES 101
+#define C_SATIE_EDIT 102
+void en_satie_start(int source, unsigned seed);
+#endif
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
 volatile uint8_t en_hushed;                      /* faded right out: the flash can be written */
@@ -994,6 +1028,19 @@ void en_note_v(int voice, int note, int vel) { post(C_NOTE, voice, (note & 0x7F)
 void en_note(int voice, int note, int on) { en_note_v(voice, note, on ? 100 : 0); }
 void en_clock(int msg) { post(C_CLOCK, msg, 0); }
 void en_regrow(void) { post(C_REGROW, 0, 0); }
+#ifdef EN_SATIE1
+void en_satie_edit(int control, int value) { post(C_SATIE_EDIT,control,value); }
+void en_satie_start(int source, unsigned seed) { post(C_SATIE, source, (int)(seed & 0xFFFFu)); }
+void en_satie_voicing(int voices) { post(C_SATIE_VOICES, voices, 100); }
+void en_satie_arrangement(int mix)
+{
+    const int voices = mix <= EN_SATIE_MIX_BASS_START ? 0 : mix <= EN_SATIE_MIX_INNER_START ? 1 : 2;
+    int inner = (mix - EN_SATIE_MIX_INNER_START) * 100 / (EN_SATIE_MIX_INNER_FULL - EN_SATIE_MIX_INNER_START);
+    if (inner < 0) inner = 0;
+    if (inner > 100) inner = 100;
+    post(C_SATIE_VOICES, voices, inner);
+}
+#endif
 void en_section(int cmd) { post(C_SECTION, cmd, 0); }
 void en_fx(uint64_t mask)                       /* in four quarters: the queue carries 16 bits */
 {
@@ -1303,6 +1350,12 @@ static const kit_t KITS[EN_NKIT] = {
     {2.0f, 0.0006f, 0.35f, 2.0f, 0.05f, 0.6f, 0.0f,
      200.0f, 390.0f, 1.2f, 0.6f, 0.9f, 460.0f, 1.0f,
      1.7f, 0.4f, 0.4f, 0.9f, 460.0f, 1.48f, 1.0f, 1.1f, 0.0f, 0.0f},
+#ifdef EN_SATIE1
+    /* Brushes: feathered bass drum; swept noise snare and soft foot taps. */
+    {1.6f, 0.0006f, 0.12f, 0.4f, 0.01f, 0.4f, 0.0f,
+     170.0f, 280.0f, 1.0f, 0.05f, 3.1f, 353.0f, 1.0f,
+     1.0f, 0.8f, 2.2f, 1.2f, 360.0f, 1.0f, 0.2f, 0.0f, 0.0f, 0.0f},
+#endif
 };
 static const kit_t *KK = &KITS[0], *KS = &KITS[0], *KH = &KITS[0], *KP = &KITS[0];   /* kick, snare and
                                                  * clap, hats, perc: each its kit */
@@ -1332,6 +1385,7 @@ static const struct { uint8_t osc, stabs; float fc, g; } PAD_SOUND[EN_NSOUND] = 
 /* the drone's: the oscillator; the saws and sub's levels, drive, cutoff (octaves) and level */
 enum { DO_SAWS, DO_REESE, DO_PULSE, DO_FM, DO_ORGAN, DO_SINE, DO_SQUARE, DO_HOOVER, DO_FIFTHS, DO_METAL, DO_SYNC, DO_FMR };
 typedef struct { uint8_t osc; float saw, sub, drive, cut, g; } drone_snd_t;
+#ifndef EN_SATIE1
 static const float DRONE_FR[EN_NSOUND] = {[17] = 2.0f, [18] = 3.5f, [19] = 5.19f};   /* DO_FMR's modulator ratio, by sound */
 static const drone_snd_t DRONE_SOUND[EN_NSOUND] = {
     {DO_SAWS, 0.4f, 0.55f, 1.0f, 0.0f, 1.0f},   {DO_SAWS, 0.3f, 0.75f, 0.8f, -0.4f, 1.0f},
@@ -1355,6 +1409,7 @@ static const drone_snd_t DRONE_SOUND[EN_NSOUND] = {
     {DO_FIFTHS, 0.45f, 0.6f, 1.8f, -0.2f, 0.9f},    /* Power: the root and its fifth, driven */
     {DO_SINE, 0.7f, 0.2f, 1.0f, 1.0f, 1.0f},    /* Air: a soft open sine */
 };
+#endif
 /* the acid's: the oscillator, its drive and level */
 enum { AO_SAW, AO_SQUARE, AO_SYNC, AO_PLUCK, AO_PWM, AO_CHIP, AO_SUB, AO_TRANCE, AO_BLEEP, AO_FIFTH, AO_BELL, AO_ORGAN,
        AO_LASER, AO_FOLD, AO_SOFT, AO_FMR, AO_SUPER, AO_CZ, AO_MINI, AO_HYPER, AO_CZP, AO_CZB, AO_LEAD };
@@ -1699,10 +1754,58 @@ static struct {
     uint8_t play;                               /* played from the keys */
     float vd;                                   /* a key's velocity, as a gain less 1 (0: as the algorithm plays it; 0.15.23) */
 } bass;
+#ifdef EN_SATIE1
+/* Two overlapping plucked strings: no sustain oscillator or sub-octave drone.
+ * Upper modes damp faster; a short fixed resonance supplies the wooden body. */
+static struct {
+    float ph[6], inc[6], env[6], decay[6], velocity;
+    uint32_t age, wait;
+} satie_bass[2];
+static unsigned satie_bass_next;
+static float satie_pad_low[4];
+/* Continuous phase and a smoothed attack keep repeated sub notes soft.
+ * A finite envelope leaves space between the score's bass pulses. */
+static struct {
+    float ph, inc, target, env, decay, amp, velocity, low;
+} satie_sub;
+
+static void satie_sub_note(int note, float velocity)
+{
+    const float seconds = fm_clampf(180.0f / (float)par[P_TEMPO], 1.8f, 3.6f) * (0.3f + 1.4f * SE(ST_BASS_LENGTH));
+    satie_sub.target = mtof((float)note) * (1.0f / EN_SR);
+    if (satie_sub.amp < 0.001f) satie_sub.inc = satie_sub.target;
+    satie_sub.env = 1.0f;
+    satie_sub.decay = fm_expf(-6.9f / (seconds * EN_SR));
+    satie_sub.velocity = fm_clampf(velocity, 0.25f, 1.2f);
+}
+
+static void satie_bass_pluck(int note, float velocity)
+{
+    static const float ratio[6] = {1.0f, 2.0008f, 3.003f, 4.008f, 5.015f, 0.0f};
+    static const float level[6] = {1.0f, 0.55f, 0.26f, 0.12f, 0.07f, 0.10f};
+    static const float damping[6] = {1.0f, 0.58f, 0.40f, 0.25f, 0.17f, 0.09f};
+    const unsigned v = satie_bass_next++ & 1u;
+    const float f = mtof((float)note);
+    const float seconds = fm_clampf(22.8f / (float)par[P_TEMPO], 0.14f, 0.26f) * (0.3f + 1.4f * SE(ST_BASS_LENGTH));
+    int k;
+    for (k = 0; k < 6; k++) {
+        satie_bass[v].ph[k] = 0.0f;
+        satie_bass[v].inc[k] = (k == 5 ? 190.0f : f * ratio[k]) * (1.0f / EN_SR);
+        satie_bass[v].env[k] = level[k] * (k ? 0.2f + 1.6f * SE(ST_BASS_TONE) : 1.0f);
+        satie_bass[v].decay[k] = fm_expf(-1.0f / (seconds * damping[k] * EN_SR));
+    }
+    satie_bass[v].velocity = fm_clampf(velocity, 0.25f, 1.2f);
+    satie_bass[v].age = 0;
+    /* A restrained laid-back placement, 6..12 ms behind the score beat. */
+    satie_bass[v].wait = (uint32_t)(fm_clampf(0.6f / (float)par[P_TEMPO], 0.006f, 0.012f) * EN_SR);
+}
+#endif
 static float bl_env, bl_gate;                   /* the bass line's envelope, 0..1, and the samples its note still holds */
 static uint8_t bl_up, bl_kick, bl_beat;         /* attacking; the kick hit this step; the notes since the bar (the riff's place) */
 static float bass_vol, reso_k = 1.0f;
+#ifndef EN_SATIE1
 static const float GLIDE_K = 1.0f / (0.6f * EN_SR);
+#endif
 static float brk;                               /* the sections, smoothed: +1 breakdown, -0.5 build, 0 groove */
 static float duck_env, duck_dec = 0.9997f;      /* the kick's sidechain: 1 just hit, falling */
 
@@ -2839,18 +2942,34 @@ static void drums_wait_step(int32_t k)          /* k samples went by: hits whose
 typedef struct { float fr, i0, i1; uint8_t rise; float g; } cm_snd_t;
 #define CM_NPLAIN 12                            /* the plain FM sounds; from here the DX voices (fm6.inc) */
 static const cm_snd_t CM_SOUND[CM_NPLAIN] = {
+#ifdef EN_SATIE1
+    {1.0064f, 0.0f, 0.0f, 0, 1.35f}, /* Ghost: dark saw pair, about eleven cents apart */
+#else
     {2.0f, 0.2f, 2.2f, 0, 1.0f},     /* Pluck */
+#endif
     {4.0f, 0.05f, 1.3f, 0, 1.0f},    /* Marimba */
+#ifdef EN_SATIE1
+    {1.0017f, 0.0f, 0.0f, 0, 1.05f}, /* Ibiza: piano-like harmonics with a softly beating string */
+#else
     {1.0f, 0.25f, 0.9f, 0, 1.05f},   /* E.Piano */
+#endif
     {5.4f, 0.04f, 0.8f, 0, 1.0f},    /* Kalimba */
     {3.5f, 0.15f, 1.8f, 0, 1.0f},    /* Bell */
+#ifdef EN_SATIE1
+    {1.0023f, 0.0f, 0.0f, 0, 1.05f}, /* Orbit: rounded harmonics + a gently detuned fundamental */
+#else
     {4.01f, 0.05f, 0.5f, 0, 1.0f},   /* Vibes */
+#endif
     {2.76f, 0.2f, 1.8f, 0, 0.95f},   /* Gong */
     {3.0f, 0.5f, 1.2f, 0, 1.0f},     /* Clav */
     {1.5f, 0.35f, 1.6f, 0, 1.0f},    /* Digital */
     {1.0f, 0.4f, 2.0f, 1, 0.9f},     /* Brass */
     {1.0f, 0.0f, 0.0f, 0, 1.15f},    /* Bleep: a plain sine */
+#ifdef EN_SATIE1
+    {1.0041f, 0.0f, 0.0f, 0, 1.05f}, /* After Hours: driven saws with a metallic ring-modulated edge */
+#else
     {7.01f, 0.1f, 1.0f, 0, 0.9f},    /* Glass */
+#endif
 };
 const char *EN_CM_SOUND[EN_NCMSND] = {"Pluck", "Marimba", "E.Piano", "Kalimba", "Bell", "Vibes", "Gong", "Clav", "Digital", "Brass", "Bleep", "Glass",
     "DX Tine EP", "DX Glass Bell", "DX Round Bass", "DX Brass Sect", "DX Soft Pad", "DX Wood Bars", "DX Drawbars", "DX Nylon Pick", "DX Brass 2", "DX Solid Bass", "DX Bells", "DX Marimba", "DX Clavinet", "DX Strings", "DX Glass Pad", "DX Sync Lead", "DX Harp", "DX Kalimba", "DX Flute", "DX Steel Drum", "DX Saw Bass", "DX Tubular", "DX Steel Gtr", "DX Clean Gtr", "DX Muted Gtr", "DX Drive Gtr", "DX Slap Bass", "DX Synth Brass", "DX Sax", "DX Mute Trumpet",
@@ -2896,7 +3015,14 @@ static const float FM_GAIN_DY[EN_NFMFACT] = {0.45f, 0.29f, 0.22f, 0.59f, 3.73f, 
 static float fm_fifo[FM_R] EN_POOL;
 static uint32_t fm_ctr;                         /* samples gone by (the first core's) */
 static float fm_ol[BLK_FM] EN_POOL, fm_or[BLK_FM] EN_POOL, fm_rs[BLK_FM] EN_POOL, fm_es[BLK_FM] EN_POOL;   /* the DX voices' part of the mix and the sends */
-static struct { float ph, ps, inc, env, dm, vel; uint32_t age; } cm[2];
+static struct {
+    float ph, ps, inc, env, dm, vel;
+    uint32_t age;
+#ifdef EN_SATIE1
+    float c1[4], c2[4], filter[4], grit_dc, metal_ph;
+    uint8_t inner;
+#endif
+} cm[2];
 static float cm_vol;
 static int cm_i, cm_alt;
 static uint8_t cm_f[32], cm_g[32], cm_ix[32], cm_vl[32];   /* the pluck's loop (deja vu): a slot heard (f), its gate, its place in the chord's tones (octave leap in bit 7 and 6: up, down), its velocity */
@@ -2926,6 +3052,16 @@ static void cm_trigger(int note, float vel)     /* a note: the next voice, its d
     }
     cm[voice].inc = mtof((float)note) * (1.0f / EN_SR);
     cm[voice].ps = 0.0f;
+#ifdef EN_SATIE1
+    cm[voice].inner = satie_inner_trigger;
+    if (par[P_CM_SND] == 5 || par[P_CM_SND] == 2 || par[P_CM_SND] == 0) cm[voice].ps = cm[voice].ph;
+    if (par[P_CM_SND] == 11 || par[P_CM_SND] == 0) {
+        cm[voice].ps = cm[voice].ph;
+        cm[voice].filter[0] = cm[voice].filter[1] = cm[voice].filter[2] = cm[voice].filter[3] = 0.0f;
+        cm[voice].grit_dc = 0.0f;
+        cm[voice].metal_ph = 0.0f;
+    }
+#endif
     cm[voice].env = 1.0f;
     cm[voice].age = 0;
     cm[voice].vel = vel;
@@ -3458,6 +3594,15 @@ static void tick(void)
         const int llen = par[P_LLEN + l] < 16 && par[P_LLEN + l] >= 1 ? par[P_LLEN + l] : 16;
         const int ls = llen < 16 ? (int)(sixteenth % (uint32_t)llen) : st;   /* a shorter lane runs against the bar: polymeter */
         int hit = pat_bit(en_lane_mask(l, lane_src[l], par[P_DENS + l]), ls, llen < 16) && (!par[P_COND + l] || cond_ok(l, fill_hold || fill_bar || (dd_fill && st >= 8))), dbl = 0;   /* dbl: a roll's extra hits (1: one at half a step; 2: two, in triplets; 3: a flam) */
+#ifdef EN_SATIE1
+        {
+            const int pattern = (int)satie_edit[ST_DRUM_PATTERN];
+            if (pattern == 0) hit = hit && !(ls & 3);
+            else if (pattern == 1) hit = l == L_KICK ? !(ls & 3) : l == L_SNARE ? (ls == 4 || ls == 12) : l == L_HAT ? !(ls & 1) : 0;
+            else if (pattern == 3) hit = l == L_KICK ? ((0x0441u >> ls)&1u) : l == L_SNARE ? ((0x2010u >> ls)&1u) : l == L_HAT ? ((0x44c4u >> ls)&1u) : 0;
+            else if (pattern == 4 && l == L_HAT && (ls & 1)) hit = 1;
+        }
+#endif
         en_lane_pos[l] = (uint8_t)ls;
         const uint64_t fxm = fx_on;
         float vel = 0.9f;
@@ -3649,6 +3794,9 @@ static void tick(void)
         drift_total = (float)hr_bars() * 16.0f * step_len;   /* the way to the next chord, for the screen and the DJ */
         drift_left = (float)(hr_left + 1) * 16.0f * step_len;
     }
+#ifdef EN_SATIE1
+    satie_step();
+#endif
     sixteenth++;
     en_bars = sixteenth;
 }
@@ -3999,6 +4147,11 @@ static void heads_step(uint32_t n)
 static inline void echoes(float in, float *el, float *er, float *xl, float *xr)
 {
     float y;
+#ifdef EN_SATIE1
+    const float tone = 0.12f + 0.60f * SE(ST_DELAY_TONE), plex_fb = echo_fb * 0.65f;
+#else
+    const float tone = 0.35f, plex_fb = 0.55f;
+#endif
     int t = plex_w - PLEX_TAP;
     if (shed3) {                                 /* shed level 3: no Echoplex (the tape alone) */
         *xl = *xr = 0.0f;
@@ -4006,9 +4159,9 @@ static inline void echoes(float in, float *el, float *er, float *xl, float *xr)
         goto tape_part;
     }
     y = (float)plex[plex_w] * (1.0f / 12000.0f);         /* the Echoplex: 160 ms, fed back, darker */
-    plex_lp += 0.35f * (y - plex_lp);
-    plex_lp2 += 0.35f * ((float)plex[t < 0 ? t + PLEX_N : t] * (1.0f / 12000.0f) - plex_lp2);
-    plex[plex_w] = s16(in + 0.55f * plex_lp);
+    plex_lp += tone * (y - plex_lp);
+    plex_lp2 += tone * ((float)plex[t < 0 ? t + PLEX_N : t] * (1.0f / 12000.0f) - plex_lp2);
+    plex[plex_w] = s16(in + plex_fb * plex_lp);
     if (++plex_w >= PLEX_N)
         plex_w = 0;
     *xl = plex_lp;
@@ -4025,7 +4178,12 @@ tape_part:
             d = (float)(TAPE_N - 4);
         h1 = tape_read(d);
         h2 = tape_read(d * head2);
-        tape_lp += 0.55f * (h1 + fb_lean * (h2 - h1) - tape_lp);   /* each time round: darker, thinner */
+#ifdef EN_SATIE1
+        tape_lp += tone *
+#else
+        tape_lp += 0.55f *
+#endif
+ (h1 + fb_lean * (h2 - h1) - tape_lp);   /* each time round: darker, thinner */
         tape_hp += 0.03f * (tape_lp - tape_hp);
         fb = tape_lp - tape_hp;
         if (++tape_w >= TAPE_N)
@@ -4347,13 +4505,26 @@ static void note_cmd(int voice, int key, int vel)   /* vel 0: the key let go; 10
     } else if (voice == EN_V_DRONE) {
         if (t >= 0) {
             int m = fold_note(t - 24 + 12 * (par[P_BASSOCT] + par[P_OCT]), 24, 83);
+#ifdef EN_SATIE1
+            if (par[P_DR_INST] == EN_SATIE_DUB_BASS) {
+                m = fold_note(m, 28, 43);       /* E1..G2: a compact, deep sub register */
+                if (on) satie_sub_note(m, vg);
+            } else {
+                m = fold_note(m, 28, 55);       /* the double bass's useful accompaniment register */
+                if (on) satie_bass_pluck(m, vg);
+            }
+#endif
             if (on && !legato) {
                 bass.env_up = 1;                /* a new press: the envelope again, at its velocity */
                 bass.vd = fm_clampf(vg, 0.3f, 1.2f) - 1.0f;
             }
             if (bass.amp < 0.02f)
                 bass.note = (float)m;           /* from silence: straight there, no glide */
-            if (bass.midi_note != m) {
+            if (bass.midi_note != m
+#ifdef EN_SATIE1
+                || on                         /* repeated pitches are fresh plucks on MIDI too */
+#endif
+            ) {
                 midi(0x82, bass.midi_note, 0);
                 midi(0x92, (uint32_t)m, (uint32_t)(vel ? vel : 100));
             }
@@ -4363,7 +4534,12 @@ static void note_cmd(int voice, int key, int vel)   /* vel 0: the key let go; 10
         } else if (bass.play) {                 /* let go: back to the chord's root */
             bass.play = 0;
             bass.vd = 0.0f;
+#ifdef EN_SATIE1
+            midi(0x82, bass.midi_note, 0);
+            bass.midi_note = 0;                 /* no return to an autonomous drone between score notes */
+#else
             bass_to((int)bass.gtarget % 12);
+#endif
         }
     } else if (t >= 0) {                        /* the acid */
         int m = fold_note(t - 12 + 12 * (par[P_AC_OCT] + par[P_OCT]), 28, 96);
@@ -4411,14 +4587,35 @@ static void quiet(void)
     for (i = 0; i < EN_NPAD; i++)
         pad[i].amp = 0.0f;
     bass.amp = 0.0f;
+#ifdef EN_SATIE1
+    satie_sub.env = satie_sub.amp = satie_sub.low = 0.0f;
+    for (i = 0; i < 6; i++)
+        satie_bass[0].env[i] = satie_bass[1].env[i] = 0.0f;
+#endif
     acid.amp = acid.amp_t = 0.0f;
     notes_off();
 }
 
+#ifdef EN_SATIE1
+#include "satie_music.inc"
+#endif
 static void master_dyn_reset(void);
 void en_init(void)
 {
     int i, l;
+#ifdef EN_SATIE1
+    satie_reset();
+    for (i = 0; i < ST_NEDIT; i++) satie_edit[i] = satie_target[i] = 50.0f;
+    satie_edit[ST_DRUM_PATTERN] = satie_target[ST_DRUM_PATTERN] = 2.0f;
+    satie_edit[ST_DELAY_FB] = satie_target[ST_DELAY_FB] = 55.0f;
+    for (i = 0; i < 2; i++) satie_lead_low[i] = satie_drum_low[i] = 0.0f;
+    satie_bass_next = 0;
+    satie_sub.ph = satie_sub.inc = satie_sub.target = satie_sub.env = 0.0f;
+    satie_sub.decay = satie_sub.amp = satie_sub.velocity = satie_sub.low = 0.0f;
+    for (i = 0; i < 4; i++) satie_pad_low[i] = 0.0f;
+    for (i = 0; i < 6; i++)
+        satie_bass[0].env[i] = satie_bass[1].env[i] = 0.0f;
+#endif
     plate_init();
     fm_init();
     fm_reset();
@@ -4523,6 +4720,9 @@ static void play_start(int from_top)
 static void play_stop(void)
 {
     int d;
+#ifdef EN_SATIE1
+    satie_release();
+#endif
     for (d = 0; d < EN_NDRUM; d++)
         drum[d].wait = drum[d].wait2 = 0, drum[d].rn = 0;        /* a swung hit still waiting stays unplayed */
     cm_wait = ac_wait = bl_wait = stab_wait = 0;   /* and the swung pluck, acid, bass and stab notes */
@@ -6003,6 +6203,16 @@ static void drain(void)
         BARRIER();
         q_r++;
         switch (c >> 24) {
+#ifdef EN_SATIE1
+        case C_SATIE_EDIT:
+            if (a < ST_NEDIT) satie_target[a] = fm_clampf((float)b,0.0f,a == ST_INNER_LEVEL ? 200.0f : a == ST_DRUM_PATTERN ? 4.0f : 100.0f);
+            break;
+        case C_SATIE: satie_start(a, (unsigned)b & 0xFFFFu); break;
+        case C_SATIE_VOICES:
+            satie_inner_gain = (float)b * 0.01f;
+            satie_voicing(a);
+            break;
+#endif
         case C_SET:
             if (a < P_NPARAMS)
                 apply(a, b);
@@ -6141,7 +6351,10 @@ static float dsn_l[BLK], dsn_r[BLK];            /* the mix before the drums (the
  * Synthi's filter below half, then tape). No chorus: a modulated delay against pure tones beats (on
  * the FM-1's speaker above all), and that read as pulsing. The width comes from the voices' places,
  * the echo's two heads and the plate. */
-static uint32_t pad_ctl[EN_NPAD], dr_ctl, ac_ctl;      /* the control steps' counts (every 32 samples), kept across chunks */
+static uint32_t pad_ctl[EN_NPAD], ac_ctl;      /* the control steps' counts (every 32 samples), kept across chunks */
+#ifndef EN_SATIE1
+static uint32_t dr_ctl;
+#endif
 static float padl[BLK] EN_POOL, padr[BLK] EN_POOL;
 static float plp[4];
 static float pad_ol[BLK] EN_POOL, pad_or[BLK] EN_POOL;   /* the job's working buffers: the pad's contribution to the mix, through the chorus, then into pad_ring (its dry sum goes straight there from pad_bus) */
@@ -6168,6 +6381,18 @@ static void pad_bus(uint32_t n)
         plp[3] += c * (plp[2] - plp[3]);
         l = plp[1] * TG(TR_PAD, j);
         r = plp[3] * TG(TR_PAD, j);
+#ifdef EN_SATIE1
+        /* Leave the low register to the plucked bass, including in Orbit's
+         * sustained atmosphere. Two gentle high-pass stages at 160 Hz. */
+        satie_pad_low[0] += 0.02254f * (l - satie_pad_low[0]);
+        satie_pad_low[1] += 0.02254f * (r - satie_pad_low[1]);
+        l -= satie_pad_low[0];
+        r -= satie_pad_low[1];
+        satie_pad_low[2] += 0.02254f * (l - satie_pad_low[2]);
+        satie_pad_low[3] += 0.02254f * (r - satie_pad_low[3]);
+        l -= satie_pad_low[2];
+        r -= satie_pad_low[3];
+#endif
         pad_ol[j] = l * 0.8f;
         pad_or[j] = r * 0.8f;
         pad_ring[2][(rv_job.pad_w + j) & (PAD_R - 1)] = l + r;   /* the dry sum, the sends' source: 0.6 of it to the reverb, 0.2 to the echo (render_chunk, a chunk on) */
@@ -6408,6 +6633,54 @@ static void render_pad(uint32_t n)
  * cannot reach the flash from RAM (R_PI32V2_LONG_JUMP_23M2 truncated), so it needs those helpers inlined or in RAM with it first.) */
 static void render_bass(uint32_t n)
 {
+#ifdef EN_SATIE1
+    const float gain = bass_vol * 0.50f;
+    const float release = bass.play ? 1.0f : 0.9985f;
+    float level = 0.0f;
+    uint32_t j;
+    int v, k;
+    for (j = 0; j < n; j++) {
+        float x = 0.0f;
+        for (v = 0; v < 2; v++) {
+            float string = 0.0f;
+            if (satie_bass[v].env[0] < 0.00001f) continue;
+            if (satie_bass[v].wait) {
+                satie_bass[v].wait--;
+                if (!bass.play) satie_bass[v].env[0] = 0.0f;
+                continue;
+            }
+            for (k = 0; k < 6; k++) {
+                string += sine(satie_bass[v].ph[k]) * satie_bass[v].env[k];
+                satie_bass[v].ph[k] += satie_bass[v].inc[k];
+                if (satie_bass[v].ph[k] >= 1.0f) satie_bass[v].ph[k] -= 1.0f;
+                satie_bass[v].env[k] *= satie_bass[v].decay[k] * release;
+            }
+            x += string * satie_bass[v].velocity *
+                 fm_minf((float)satie_bass[v].age * (1.0f / ((0.001f + 0.012f * SE(ST_BASS_ATTACK) * SE(ST_BASS_ATTACK)) * EN_SR)), 1.0f);
+            satie_bass[v].age++;
+        }
+        /* Render old tails across mood changes as well as the selected voice. */
+        if (satie_sub.amp > 0.00001f || satie_sub.env > 0.00001f) {
+            float wave;
+            satie_sub.inc += (satie_sub.target - satie_sub.inc) * (1.0f / (0.045f * EN_SR));
+            satie_sub.ph += satie_sub.inc;
+            if (satie_sub.ph >= 1.0f) satie_sub.ph -= 1.0f;
+            wave = sine(satie_sub.ph) + 0.10f * sine(2.0f * satie_sub.ph) +
+                   0.03f * sine(3.0f * satie_sub.ph);
+            wave = soft_sat(1.35f * wave) * (1.0f / 1.2f);
+            satie_sub.low += (0.008f + 0.0346f * SE(ST_BASS_TONE)) * (wave - satie_sub.low); /* dark 180 Hz low-pass */
+            satie_sub.amp += (satie_sub.env - satie_sub.amp) * (1.0f / ((0.003f + 0.048f * SE(ST_BASS_ATTACK) * SE(ST_BASS_ATTACK)) * EN_SR));
+            satie_sub.env *= satie_sub.decay * (bass.play ? 1.0f : 0.9995f);
+            x += 1.28f * satie_sub.low * satie_sub.amp * satie_sub.velocity;
+        }
+        bass_o[j] = x * gain * TG(TR_DRONE, j);
+        level = fm_maxf(level, fm_fabsf(x));
+    }
+    for (v = 0; v < 2; v++)
+        for (k = 0; k < 6; k++)
+            satie_bass[v].env[k] = fm_flush(satie_bass[v].env[k]);
+    bass.amp = en_bass_level = level;
+#else
     const int ft_bass = fxs_v[EN_FXS_FT_BASS];
     uint32_t j;
     const drone_snd_t *DS = &DRONE_SOUND[(unsigned)par[P_DR_INST] < EN_NSOUND ? par[P_DR_INST] : 0];
@@ -6556,6 +6829,7 @@ static void render_bass(uint32_t n)
     bass.mph = mp;
     bass.amp = amp;
     en_bass_level = bl_on ? amp * bl_env : amp;
+#endif
 }
 
 static void render_dj(uint32_t n)               /* the snips, into the mix and its sends, before the sidechain */
@@ -6622,6 +6896,14 @@ static void render_cm(uint32_t n)
     const int sn = par[P_CM_SND] < 0 ? 0 : par[P_CM_SND] >= CM_NPLAIN ? CM_NPLAIN - 1 : par[P_CM_SND];
     const cm_snd_t *S = &CM_SOUND[sn];
     const float g = cm_vol * 0.5f * S->g, pfc = HB(EN_V_PLUCK) ? hb_pf : 1.0f;   /* (a keyboard's bend) */
+#ifdef EN_SATIE1
+    const float attack = sn == 0 ? 1.0f / (0.028f * EN_SR) : sn == 5 ? 1.0f / (0.014f * EN_SR) : sn == 11 ? 1.0f / (0.003f * EN_SR) : sn == 2 ? 1.0f / (0.0035f * EN_SR) : 1.0f / 96.0f;
+    const float tuning = sn == 0 ? 0.996815f : 1.0f;
+    const float rv_send = sn == 11 ? 0.20f : sn == 2 ? 0.24f : 0.35f;
+    const float echo_send = sn == 11 ? 0.30f : sn == 2 ? 0.25f : 0.50f;
+#else
+    const float attack = 1.0f / 96.0f, rv_send = 0.35f, echo_send = 0.50f;
+#endif
     float lvl = 0.0f;
     int v;
     uint32_t j;
@@ -6640,17 +6922,103 @@ static void render_cm(uint32_t n)
         if (cm[v].env < 0.0008f)
             continue;
         for (j = 0; j < n; j++) {
-            const float e = cm[v].env, idx = S->i0 + S->i1 * (S->rise ? 1.0f - e : e),
-                        y = sine_any(cm[v].ph + idx * sine(cm[v].ps)) * e * fm_minf((float)cm[v].age * (1.0f / 96.0f), 1.0f) * cm[v].vel * g *
-                            TG(TR_CM, j);
+            const float e = cm[v].env, idx = S->i0 + S->i1 * (S->rise ? 1.0f - e : e);
+            float wave, y;
+#ifdef EN_SATIE1
+            if (sn == 0) {
+                const float inc = cm[v].inc * pfc * tuning;
+                /* A slow bloom, not After Hours' bright filter pluck. The
+                 * detuning is centred on the score pitch. Existing slow
+                 * modulation moves the dark filter without extra randomness. */
+                if (!(cm[v].age & 31u)) {
+                    const float bloom = 4.0f * e * (1.0f - e);
+                    const float fc = fm_clampf((200.0f + cm[v].inc * pfc * EN_SR *
+                        (2.4f + 0.8f * bloom)) * (1.0f + 0.08f * mod[6].v), 350.0f, 4000.0f);
+                    svf_coefs(cm[v].c1, fc, 1.1f);
+                    svf_coefs(cm[v].c2, fm_minf(fc * 0.85f, 2400.0f), 1.6f);
+                }
+                wave = 0.53f * blep_saw(cm[v].ph, inc) +
+                       0.47f * blep_saw(cm[v].ps, inc * S->fr);
+                wave = svf_lp(wave, cm[v].c1, &cm[v].filter[0]);
+                {
+                    /* Keep the low-mid rasp, but filter all of the driven
+                     * signal: an unfiltered path exposed piercing harmonics
+                     * and quantization noise, especially on upper notes. */
+                    float driven = soft_sat((1.0f + 9.0f * SE(ST_LEAD_CHAR)) * wave + 0.24f) - soft_sat(0.24f);
+                    const float grain = (float)(int)(driven * 16.0f + (driven < 0.0f ? -0.5f : 0.5f)) * (1.0f / 16.0f);
+                    driven += 0.5f * SE(ST_LEAD_CHAR) * (grain - driven);
+                    wave = 0.82f * svf_lp(driven, cm[v].c2, &cm[v].filter[2]);
+                    cm[v].grit_dc += 0.002845f * (wave - cm[v].grit_dc);
+                    wave -= cm[v].grit_dc;      /* remove the biased drive's DC, about 20 Hz */
+                }
+            } else if (sn == 5) {
+                /* Low harmonics give the violin-register lead body. The
+                 * second oscillator broadens it without a bell's FM ratio. */
+                const float core = (sine(cm[v].ph) + 0.22f * sine_any(2.0f * cm[v].ph) +
+                                    0.08f * sine_any(3.0f * cm[v].ph)) * (1.0f / 1.30f);
+                wave = (1.0f - 0.64f * SE(ST_LEAD_CHAR)) * core + 0.64f * SE(ST_LEAD_CHAR) * sine(cm[v].ps);
+            } else if (sn == 2) {
+                /* A synthetic piano: upper string harmonics die away faster
+                 * than the fundamental, leaving a warm ringing body.
+                 * The quiet detuned string adds beating without a bell's FM. */
+                const float bright = e * e, hammer = bright * e;
+                const float core = sine(cm[v].ph) +
+                    0.50f * e * sine_any(2.0f * cm[v].ph) +
+                    0.24f * bright * sine_any(3.0f * cm[v].ph) +
+                    0.14f * bright * sine_any(4.0f * cm[v].ph) +
+                    0.08f * hammer * sine_any(5.0f * cm[v].ph) +
+                    0.04f * hammer * sine_any(6.0f * cm[v].ph);
+                wave = (1.0f - 0.6f * SE(ST_LEAD_CHAR)) * core +
+                    0.2f * SE(ST_LEAD_CHAR) * sine(cm[v].ps);
+                /* Towards strings: a softer attack and slower harmonic fade. */
+                wave *= fm_minf((float)cm[v].age / (1.0f + 600.0f * SE(ST_LEAD_CHAR) * SE(ST_LEAD_CHAR)),1.0f);
+            } else if (sn == 11) {
+                const float inc = cm[v].inc * pfc;
+                /* An inharmonic sideband adds metal while the saw's fundamental
+                 * keeps Satie's pitches clear. The edge bites on the attack,
+                 * then recedes into the driven resonant body. */
+                if (!(cm[v].age & 31u)) {
+                    const float fc = fm_clampf(240.0f + inc * EN_SR * (2.2f + 6.0f * fm_sqrtf(e)), 300.0f, 7800.0f);
+                    svf_coefs(cm[v].c1, fc, 0.55f);
+                    svf_coefs(cm[v].c2, fc, 1.4f);
+                }
+                wave = 0.58f * blep_saw(cm[v].ph, inc) +
+                       0.42f * blep_saw(cm[v].ps, inc * S->fr);
+                wave += (0.24f + 0.64f * e) * SE(ST_LEAD_CHAR) * sine(cm[v].ph) * sine(cm[v].metal_ph);
+                cm[v].metal_ph += fm_minf(inc * 1.414214f, 0.18f);
+                if (cm[v].metal_ph >= 1.0f) cm[v].metal_ph -= 1.0f;
+                wave = svf_lp(wave, cm[v].c1, &cm[v].filter[0]);
+                wave = soft_sat((1.0f + 6.4f * SE(ST_LEAD_CHAR)) * wave);
+                wave = 0.78f * svf_lp(wave, cm[v].c2, &cm[v].filter[2]) + 0.12f * wave;
+            } else {
+                wave = sine_any(cm[v].ph + idx * sine(cm[v].ps));
+            }
+#else
+            wave = sine_any(cm[v].ph + idx * sine(cm[v].ps));
+#endif
+#ifdef EN_SATIE1
+            wave = satie_tilt(wave, &satie_lead_low[v], SE(ST_LEAD_TONE), 0.13f);
+#endif
+            y = wave * e * fm_minf((float)cm[v].age * attack, 1.0f) * cm[v].vel * g * TG(TR_CM, j);
+#ifdef EN_SATIE1
+            if (cm[v].inner) y *= satie_inner_gain * 2.0f * SE(ST_INNER_LEVEL);
+#endif
             mixl[j] += y * pl * 2.0f;
             mixr[j] += y * pr * 2.0f;
-            rsend[j] += y * 0.35f;
-            esend[j] += y * 0.5f;
+            rsend[j] += y * rv_send;
+            esend[j] += y * echo_send;
+#ifdef EN_SATIE1
+            cm[v].ph += cm[v].inc * pfc * tuning;
+#else
             cm[v].ph += cm[v].inc * pfc;
+#endif
             if (cm[v].ph >= 1.0f)
                 cm[v].ph -= 1.0f;
+#ifdef EN_SATIE1
+            cm[v].ps += cm[v].inc * pfc * tuning * S->fr;
+#else
             cm[v].ps += cm[v].inc * pfc * S->fr;
+#endif
             if (cm[v].ps >= 1.0f)
                 cm[v].ps -= (float)(int)cm[v].ps;
             cm[v].env *= cm[v].dm;
@@ -7119,6 +7487,40 @@ static void render_perc(drum_t *v, uint32_t n, float g)
     v->on = amp > 0.0005f;
 }
 
+#ifdef EN_SATIE1
+static void render_brush(drum_t *v, uint32_t n, float g, int foot)
+{
+    const float attack = foot ? 0.008f : 0.0011f;
+    const float highpass = foot ? 0.10f : 0.045f;
+    const int track = foot ? TR_HATS : TR_SNARE;
+    uint32_t j;
+    float x = 0.0f;
+    if (!v->on) return;
+    for (j = 0; j < n; j++) {
+        float white;
+        noise = noise * 1664525u + 1013904223u;
+        white = (float)(int32_t)noise * (1.0f / 2147483648.0f);
+        /* Band-limited friction; the top opens gently as the brush sweeps.
+         * No pitched snare crack, clap bursts or metallic square waves. */
+        v->x1 += (0.12f + 0.20f * v->att) * (white - v->x1);
+        v->x2 += highpass * (v->x1 - v->x2);
+        x = (v->x1 - v->x2) * v->amp * v->att * g * 3.0f * TG(track, j) + v->fo;
+        mixl[j] += x * (foot ? 0.85f : 1.0f);
+        mixr[j] += x * (foot ? 1.0f : 0.95f);
+        rsend[j] += x * 0.20f;
+        esend[j] += x * 0.02f;
+        v->amp *= v->adec;
+        v->att += (1.0f - v->att) * attack;
+        v->fo *= DR_FADE;
+    }
+    v->x1 = fm_flush(v->x1);
+    v->x2 = fm_flush(v->x2);
+    v->fo = fm_flush(v->fo);
+    v->xl = x;
+    v->on = v->amp > 0.0005f;
+}
+#endif
+
 static void render_drums(uint32_t n)
 {
     uint32_t j;
@@ -7171,10 +7573,26 @@ static void render_drums(uint32_t n)
         v->xl = x;
         v->on = amp > 0.0005f || r1 - r2 > 0.002f;
     }
-    render_snare(&drum[L_SNARE], n, g * 0.38f * lane_g[L_SNARE]);
-    render_clap(&drum[L_CLAP], n, g * 0.42f * lane_g[L_CLAP]);
-    render_hat(&drum[L_HAT], n, g * 0.22f * lane_g[L_HAT], 0.75f, 1.0f);    /* a little right */
-    render_hat(&drum[L_OHAT], n, g * 0.18f * lane_g[L_OHAT], 1.0f, 0.75f);  /* a little left */
+#ifdef EN_SATIE1
+    if (par[P_KIT_SNARE] == EN_KIT_BRUSH) {
+        render_brush(&drum[L_SNARE], n, g * 0.38f * lane_g[L_SNARE], 0);
+        render_brush(&drum[L_CLAP], n, g * 0.30f * lane_g[L_CLAP], 0);
+    } else
+#endif
+    {
+        render_snare(&drum[L_SNARE], n, g * 0.38f * lane_g[L_SNARE]);
+        render_clap(&drum[L_CLAP], n, g * 0.42f * lane_g[L_CLAP]);
+    }
+#ifdef EN_SATIE1
+    if (par[P_KIT_HAT] == EN_KIT_BRUSH) {
+        render_brush(&drum[L_HAT], n, g * 0.22f * lane_g[L_HAT], 1);
+        render_brush(&drum[L_OHAT], n, g * 0.18f * lane_g[L_OHAT], 1);
+    } else
+#endif
+    {
+        render_hat(&drum[L_HAT], n, g * 0.22f * lane_g[L_HAT], 0.75f, 1.0f);
+        render_hat(&drum[L_OHAT], n, g * 0.18f * lane_g[L_OHAT], 1.0f, 0.75f);
+    }
     render_perc(&drum[L_PERC], n, g * 0.3f * lane_g[L_PERC]);
 }
 
@@ -7191,7 +7609,11 @@ static void mx_gains(int t, float *gl, float *gr, float *sg)
     *gr = fm_minf(1.0f, 2.0f * p);
     *sg = (float)par[P_SEND + t] * 0.02f;
 }
-static int mx_off(int t) { return par[P_PAN + t] != 50 || par[P_SEND + t] != 50; }
+static int mx_off(int t) {
+#ifdef EN_SATIE1
+    if (t == 4) return 1;
+#endif
+    return par[P_PAN + t] != 50 || par[P_SEND + t] != 50; }
 static void mx_begin(int t, uint32_t n)
 {
     uint32_t j;
@@ -7212,6 +7634,12 @@ static void mx_end(int t, uint32_t n)
         return;
     mx_gains(t, &gl, &gr, &sg);
     for (j = 0; j < n; j++) {
+#ifdef EN_SATIE1
+        if (t == 4) {
+            mixl[j] = mx_sv[0][j] + satie_tilt(mixl[j]-mx_sv[0][j],&satie_drum_low[0],SE(ST_DRUM_TONE),0.12f);
+            mixr[j] = mx_sv[1][j] + satie_tilt(mixr[j]-mx_sv[1][j],&satie_drum_low[1],SE(ST_DRUM_TONE),0.12f);
+        }
+#endif
         mixl[j] = mx_sv[0][j] + (mixl[j] - mx_sv[0][j]) * gl;
         mixr[j] = mx_sv[1][j] + (mixr[j] - mx_sv[1][j]) * gr;
         rsend[j] = mx_sv[2][j] + (rsend[j] - mx_sv[2][j]) * sg;
@@ -7474,6 +7902,12 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         float el, er, xl, xr;
         echoes(esend[j] * eg + thr * (mixl[j] + mixr[j]) + tdg * (busl[j] + busr[j]), &el, &er, &xl, &xr);
         push(&dl[L_PRE], (rsend[j] * rg + (el + er + xl + xr) * 0.35f * rev_send + wash_e * 0.2f * (mixl[j] + mixr[j])) * 0.8f);
+#ifdef EN_SATIE1
+        { const float w = 2.0f*SE(ST_WIDTH), mid = 0.5f*(el+er), side = 0.5f*(el-er)*w;
+          el=mid+side;er=mid-side; }
+        { const float mid = 0.5f*(xl+xr), side = (xl-xr)*SE(ST_WIDTH);
+          xl=mid+side;xr=mid-side; }
+#endif
         mixl[j] = (mixl[j] + (0.75f * el + 0.15f * xl) * dk[j]) * 0.36f;
         mixr[j] = (mixr[j] + (0.75f * er + 0.15f * xr) * dk[j]) * 0.36f;
         dk[j] *= 1.3f * 0.36f;                  /* what the tank's output is scaled by */
@@ -7505,7 +7939,12 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     bal_w += pt0_ - bal_a;
     DT0();
     for (j = 0; j < n; j++) {                   /* the tank's output in, the performance effects */
+#ifdef EN_SATIE1
+        const float mid = 0.5f*(rv_wl[j]+rv_wr[j]), side = (rv_wl[j]-rv_wr[j])*SE(ST_WIDTH);
+        float l = mixl[j] + dk[j]*(mid+side), r = mixr[j] + dk[j]*(mid-side);
+#else
         float l = mixl[j] + dk[j] * rv_wl[j], r = mixr[j] + dk[j] * rv_wr[j];
+#endif
         fx_master(&l, &r);
         mixl[j] = l;
         mixr[j] = r;
@@ -7627,6 +8066,12 @@ static uint32_t arc_left;
 static void control(uint32_t n)                 /* once a chunk: the slow things */
 {
     int i;
+#ifdef EN_SATIE1
+    for (i = 0; i < ST_NEDIT; i++)
+        satie_edit[i] += (satie_target[i] - satie_edit[i]) * fm_minf((float)n / (0.04f * EN_SR),1.0f);
+    satie_edit[ST_DRUM_PATTERN] = satie_target[ST_DRUM_PATTERN];
+    echo_fb = 0.82f * SE(ST_DELAY_FB); /* independent of reverb size; safely below unity */
+#endif
     mods_step(n);
     heads_step(n);
     fx_control(n);

@@ -5,3 +5,7 @@ __pycache__/
 .serena/
 docs/superpowers/
 telemetry/
+
+.venv/
+.env
+.env.*

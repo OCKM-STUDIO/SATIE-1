@@ -1,0 +1,44 @@
+SATIE-1 — Erik. Evolved.
+By OCKM Studio
+=======================
+I've kept it simple. Choose a tune and a mood, then let the music evolve while
+you work. You can stay on Home: four knobs are enough to make it yours.
+
+FIRST MINUTE
+1. Turn MASTER down before you start, then bring it up comfortably.
+2. PRESET chooses a tune. SELECT chooses a mood.
+3. Press HOME. The four knobs are Tempo, Energy, Evolve and Mix.
+4. Leave it running, or press REC to hold an eight-bar phrase you like.
+
+HOME MIX: SOLO / DUET / TRIO
+0 = lead and drums; 45 = add bass and atmosphere; 85 = add the third voice.
+Mix blends between these arrangements. Delay's Wet control is separate.
+
+TUNES
+Press SEL to browse Gymnopedies, Gnossiennes and Ogives. Turn SELECT or PRESET,
+press SEL to choose. HOME goes back. Confirmed changes begin on the next bar.
+
+MAKE IT YOURS
+Turn ALGORITHM through Home, Lead, Bass, Drums, Layers, Colour, Delay and Space.
+The four knobs follow the labels on the screen. Instrument Level 50 keeps the
+mood's balance; 0 mutes that part. EDIT resets only the page you are editing.
+Colour offers Clean / Vinyl / Tape / Grit, amount, wobble and dust.
+Delay offers time / repeats / tone / wet. Space shapes reverb and stereo width.
+Ibiza Chill now has a steady background: no automatic chorus or pumping.
+Choose Vinyl or Tape and raise Wobble when you want deliberate pitch movement.
+
+KEEP, RECALL, HELP
+SAVE keeps one favourite, including every page. GLO opens the guide.
+Turn SELECT or ALGORITHM to read it; SEL advances a page.
+On the final Keep and Recall page, SEL recalls your saved track.
+HOME or GLO closes the guide. Music continues while you read.
+
+HOME then EDIT makes a fresh rhythm/variation seed on the next bar.
+PLAY pauses/resumes. REC holds/releases the current eight-bar passage.
+The small Erik portrait appears at startup; a button skips it.
+
+LIBRARY AND MOODS
+Gymnopedies 1–3; Gnossiennes 1–3; Ogives 1–4.
+After Hours / Ibiza Chill / Orbit / Blue Note / Ghost.
+Simplified electronic score arrangements, not recordings or literal piano
+performances. The companion SOURCES.txt gives edition credits and licences.

@@ -13,6 +13,9 @@
 #include <stdint.h>
 #include "fm1_xip.h"
 
+/* Original Puya P25Q80 and newer UC25HQ80: compatible 1 MiB SPI NOR. */
+#define FL_JEDEC_OK(id) ((id) == 0x856014u || (id) == 0xB36014u)
+
 #define RAMFN  __attribute__((section(".ram_text"), noinline, used))
 #define RAMINL static inline __attribute__((always_inline))
 

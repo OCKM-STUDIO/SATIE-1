@@ -1,0 +1,14 @@
+name: SATIE-1 release
+on:
+  push:
+    tags: ["v*"]
+jobs:
+  build:
+    uses: zvenson/fm1-build/.github/workflows/build.yml@v1
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    with:
+      build: EN_SATIE1=1 sh build.sh --release "${GITHUB_REF_NAME#v}"
+      packages: build/satie-1-*.fwsc

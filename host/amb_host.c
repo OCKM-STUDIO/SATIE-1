@@ -460,6 +460,31 @@ static int expect_quiet;                         /* (waitfor: the tries before t
 static int expect(const char *what, const char *val)
 {
     int got;
+#ifdef EN_SATIE1
+    if (!strcmp(what, "satie_page")) got = satie_ui.page;
+    else if (!strcmp(what, "satie_splash")) got = ui.splash;
+    else if (!strcmp(what, "satie_help")) got = satie_ui.help;
+    else if (!strcmp(what, "satie_pump")) got = !!(ui.fx_lock & FXB(FX_PUMP));
+    else if (!strcmp(what, "satie_chorus")) got = proj.par[P_PL_CHO];
+    else if (!strcmp(what, "satie_motion")) got = proj.par[P_MOTION];
+    else if (!strcmp(what, "satie_k1")) got = satie_knob_value(satie_ui.page,0);
+    else if (!strcmp(what, "satie_k2")) got = satie_knob_value(satie_ui.page,1);
+    else if (!strcmp(what, "satie_k3")) got = satie_knob_value(satie_ui.page,2);
+    else if (!strcmp(what, "satie_k4")) got = satie_knob_value(satie_ui.page,3);
+    else if (!strcmp(what, "satie_source")) got = en_satie_source;
+    else if (!strcmp(what, "satie_seed")) got = en_satie_seed;
+    else if (!strcmp(what, "satie_section")) got = en_satie_section;
+    else if (!strcmp(what, "satie_step")) got = en_satie_step;
+    else if (!strcmp(what, "satie_length")) got = en_satie_length;
+    else if (!strcmp(what, "satie_voices")) got = en_satie_voices;
+    else if (!strcmp(what, "satie_mood")) got = satie_ui.current.mood;
+    else if (!strcmp(what, "satie_pending")) got = satie_ui.pending;
+    else if (!strcmp(what, "satie_savewait")) got = satie_ui.store_wait;
+    else if (!strcmp(what, "satie_browser")) got = satie_ui.browser;
+    else if (!strcmp(what, "satie_browser_collection")) got = satie_ui.browser_collection;
+    else if (!strcmp(what, "satie_browser_cursor")) got = satie_ui.browser_cursor;
+    else
+#endif
     if (!strcmp(what, "playing"))
         got = en_playing;
     else if (!strcmp(what, "frozen"))

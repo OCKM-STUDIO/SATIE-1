@@ -748,7 +748,8 @@ static void fm1_main(void)
     uint32_t last_frame = 0;
     {
         uint32_t f = irq_save();
-        flash_ok = FL_FAR(fl_jedec_ram)() == 0x856014u;
+        const uint32_t flash_id = FL_FAR(fl_jedec_ram)();
+        flash_ok = FL_JEDEC_OK(flash_id);
         if (flash_ok)
             FL_FAR(fl_resume_ram)();                      /* (an erase left suspended by a reset finishes) */   /* the expected 1 MiB part, else RAM only */
         irq_restore(f);

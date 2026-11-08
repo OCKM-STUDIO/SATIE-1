@@ -40,7 +40,13 @@
 #define EN_NCMFM (EN_NFMFACT + EN_NUSER)   /* the counter-melody's six-operator FM sounds: after the plain ones */
 #define EN_NCMSND (12 + EN_NCMFM)      /* the counter-melody's sounds */
 #define EN_NCMSTYLE 6                  /* its styles */
+#ifdef EN_SATIE1
+#define EN_NKIT 15
+#define EN_KIT_BRUSH 14
+#define EN_SATIE_DUB_BASS 8             /* Ghost's dedicated sub, selected by P_DR_INST */
+#else
 #define EN_NKIT 14                      /* the sounds each drum (kick, snare + clap, hats, perc) can play */
+#endif
 enum { EN_V_PAD, EN_V_DRONE, EN_V_ACID, EN_V_SAMPLE, EN_V_PLUCK };   /* the voices the keys can play (en_note) */
 
 /* modes: pools relative to the root (bit i: root + i semitones) */
@@ -188,6 +194,21 @@ void en_hush(int on);                          /* a store while playing: fade ou
 extern volatile uint8_t en_hushed;             /* faded right out (the flash can be written) */
 void en_panic(void);                           /* everything quiet, now */
 void en_regrow(void);                          /* a new piece: fresh loops, the home chord */
+#ifdef EN_SATIE1
+enum { ST_LEAD_TONE, ST_LEAD_CHAR, ST_BASS_TONE, ST_BASS_ATTACK, ST_BASS_LENGTH,
+       ST_DRUM_TONE, ST_DRUM_PATTERN, ST_INNER_LEVEL, ST_DELAY_FB, ST_DELAY_TONE, ST_WIDTH, ST_NEDIT };
+void en_satie_edit(int control, int value); /* audio-queue edit; continuous values slew */
+void en_satie_start(int source, unsigned seed);
+void en_satie_voicing(int voices);
+/* Mix fades accompaniment in first, then the third musical part. */
+#define EN_SATIE_MIX_BASS_START 10
+#define EN_SATIE_MIX_BASS_FULL 40
+#define EN_SATIE_MIX_INNER_START 55
+#define EN_SATIE_MIX_INNER_FULL 80
+void en_satie_arrangement(int mix);
+extern volatile uint8_t en_satie_source, en_satie_section, en_satie_voices;
+extern volatile uint16_t en_satie_seed, en_satie_step, en_satie_length;
+#endif
 
 /* the sections: a breakdown, a build, the drop, each taken on the next bar. A breakdown lasts until
  * a build (four bars, then the drop) or a drop is asked for; a build cut short by a drop drops. */

@@ -1,0 +1,105 @@
+# Default, collection picker, cancellation, next-bar switch and new favourite.
+wait 100
+expect satie_source 0
+expect satie_mood 2
+expect tempo 60
+shot home.png
+tap SEL
+wait 100
+expect satie_browser 1
+expect satie_browser_cursor 0
+shot collections.png
+spin SELECT 1
+tap SEL
+spin SELECT 2
+wait 3000
+expect satie_browser 2
+expect satie_browser_collection 1
+expect satie_browser_cursor 2
+expect satie_source 0
+expect satie_mood 2
+expect playing 1
+expect satie_step >10
+shot gnossiennes.png
+tap HOME
+tap HOME
+wait 100
+expect satie_browser 0
+expect satie_source 0
+tap SEL
+spin SELECT 200
+tap SEL
+spin SELECT 200
+wait 100
+expect satie_browser_collection 2
+expect satie_browser_cursor 3
+shot ogives.png
+tap SEL
+waitfor satie_source 9 5000
+expect satie_browser 0
+expect tempo 58
+tap PLAY
+wait 100
+spin PRESET -200
+wait 100
+expect satie_source 0
+expect tempo 60
+spin PRESET 1
+wait 100
+expect satie_source 1
+expect tempo 56
+shot gymnopedie-2.png
+tap SAVE
+wait 1000
+reboot
+wait 500
+expect satie_source 1
+expect satie_mood 2
+expect satie_browser 0
+expect tempo 56
+tap PLAY
+wait 100
+spin PRESET 200
+wait 100
+expect satie_source 9
+spin PRESET -200
+wait 100
+expect satie_source 0
+expect parsbad 0
+# Mix, Hold, new track and all moods.
+spin K4 -200
+wait 1000
+expect satie_voices 0
+spin K4 45
+wait 1000
+expect satie_voices 1
+spin K4 200
+wait 1000
+expect satie_voices 2
+spin SELECT -200
+wait 100
+expect satie_mood 0
+spin SELECT 1
+wait 100
+expect satie_mood 1
+spin SELECT 1
+wait 100
+expect satie_mood 2
+spin SELECT 1
+wait 100
+expect satie_mood 3
+spin SELECT 1
+wait 100
+expect satie_mood 4
+tap PLAY
+tap REC
+wait 3000
+expect frozen 1
+tap REC
+expect frozen 0
+tap EDIT
+expect satie_pending 1
+waitfor satie_pending 0 5000
+expect satie_seed 252
+expect playing 1
+expect parsbad 0

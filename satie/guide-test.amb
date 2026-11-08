@@ -1,0 +1,70 @@
+wait 100
+spin ALGO 3
+spin K4 15
+tap GLO
+expect satie_help 1
+expect playing 1
+spin K4 40
+expect satie_k4 65
+spin PRESET 2
+expect satie_source 0
+spin SELECT 200
+expect satie_help 8
+spin ALGO -200
+expect satie_help 1
+shot guide-1.png
+tap SEL
+expect satie_help 2
+tap SEL
+expect satie_help 3
+shot guide-3.png
+tap SEL
+expect satie_help 4
+shot guide-mix.png
+tap GLO
+expect satie_help 0
+expect satie_page 3
+tap HOME
+spin SELECT -1
+waitfor satie_pending 0 5000
+expect satie_mood 1
+expect satie_pump 0
+expect satie_chorus 0
+expect satie_motion 0
+tap SAVE
+wait 1500
+spin K4 30
+tap GLO
+spin SELECT 200
+shot guide-recall.png
+tap SEL
+waitfor satie_pending 0 5000
+expect satie_help 0
+expect satie_k4 42
+expect satie_mood 1
+tap SEL
+expect satie_browser 1
+tap GLO
+expect satie_help 1
+expect satie_browser 0
+tap HOME
+expect satie_help 0
+expect satie_seed 1
+expect playing 1
+expect parsbad 0
+splash 1800
+reboot
+wait 100
+shot startup.png
+expect satie_splash 1
+wait 1900
+expect satie_splash 0
+expect playing 1
+splash 1800
+reboot
+wait 100
+tap GLO
+expect satie_splash 0
+expect satie_help 0
+tap GLO
+expect satie_help 1

@@ -1,4 +1,9 @@
-# PERF-1 licensing
+# SATIE-1 licensing
+
+SATIE-1 is by OCKM Studio, based on PERF-1 and the projects credited below.
+SATIE-1 firmware changes are distributed under GPL-3.0-only. Score editions
+and adapted score data have their own notices in [satie/SOURCES.txt](satie/SOURCES.txt);
+artwork credits are in [satie/art/CREDITS.txt](satie/art/CREDITS.txt).
 
 PERF-1 (by deamonSLINKY) is a fork of HYP-1 by RedtailWorks, itself a fork of Charles Vestal's AMB-1. It is free software under the GNU General Public
 License, version 3 only
