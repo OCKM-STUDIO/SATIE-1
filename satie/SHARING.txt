@@ -1,12 +1,12 @@
 SATIE-1 — OCKM Studio — The Firmware Hub preparation
 ====================================================
 Repository: https://github.com/OCKM-STUDIO/SATIE-1
-Beta tag: v0.1.1-beta
+Beta tag: v0.1.2-beta
 Target: https://thefirmwarehub.com/submit/
 Requirements checked 2026-11-08 against the submission page and fmhub.md.
 
 BETA RELEASE
-- SATIE-1 0.1.1-beta firmware package, with update loader.
+- SATIE-1 0.1.2-beta firmware package, with update loader.
 - Public source and licences at the matching release tag, plus a source ZIP.
 - Identity FM-1_9980100: no exact or pattern match among the catalogue's 161
   firmwares on 2026-11-08. Not a reservation or confirmed Hub listing.
@@ -19,28 +19,30 @@ BETA RELEASE
   a locally built package does not acquire an attestation by being uploaded.
 
 HARDWARE RESULTS — 2026-11-08
-- Stock V15 -> SATIE-1 0.1.0-beta: confirmed by the maker.
-- SATIE-1 0.1.0-beta -> 0.1.1-beta listening candidate: installed and playing on the FM-1.
-- Ibiza Chill clicking: maker confirmed fixed in 0.1.1-beta after testing.
-- Final release also corrects pad-state clearing on reset. Memory/regression
-  checks cover it; the final rebuilt package has not yet been retested on-device.
-- Device has the original Puya flash (0x856014), observed in M-Flasher.
-- Earlier SATIE-1 -> V15 through the Python installer stopped after 35 reads,
-  before firmware writing. The symptom matches the protected boot-area check
-  reproduced in a host test. V15 and its bootloader were restored with M-Flasher.
-  This was recovery, not a successful normal-installer exit from SATIE-1.
+- Original Puya flash (0x856014), observed in M-Flasher.
+- Stock V15 -> SATIE-1 0.1.0-beta and update to the 0.1.1 listening candidate passed.
+- SATIE-1 -> stock V15 -> final 0.1.1-beta through normal installers: passed.
+- Ibiza Chill clicking fixed; maker confirmed the final 0.1.1-beta sounds good.
+- SAVE followed by power-off/on restores tune, mood and edits: passed on 0.1.1-beta.
+  Startup restores the saved favourite, not unsaved changes.
+- Mood wording and SATIE-1 -> PERF-1 -> SATIE-1: passed with 0.1.2-dev.
+  PERF-1 version not recorded. These are candidate tests, not exact-beta tests.
+- An earlier normal V15 return stopped after 35 reads, before writing. After
+  M-Flasher restored V15 and its stock bootloader, the normal retry succeeded.
+- 0.1.2-beta has the candidate's firmware logic with a beta version label.
+  No audio, storage or updater changes since the tested candidate.
 
 BEFORE A HUB SUBMISSION
-Record direct V15 -> this exact 0.1.1-beta, another custom firmware -> this beta,
-and this beta -> another custom firmware using a normal installer. Retry the
-normal return to V15 now that its bootloader has been restored; the pad fix does
-not change that update path. Check Keep/Recall after power-off, USB identity and
-port detection, and interrupted-update recovery with a backup/recovery route
-prepared first. Complete hardware checks using the actual release file.
+Use the exact 0.1.2-beta release file for final installation-route checks
+(V15 -> SATIE, other custom -> SATIE, SATIE -> other custom), USB identification
+and interrupted-update recovery. Recovery has NOT yet been tested on hardware.
+For a controlled USB-interruption test, charge the battery, keep the FM-1
+powered on and retain a full M-Flasher backup. Interrupt only a normal firmware
+installation at its writing stage; never interrupt M-Flasher/bootloader writes.
+Reconnect and rerun the same package through the normal installer. Record its
+output and whether the loader resumes and returns to playable SATIE.
 The new UC25HQ80 flash ID is recognised in software, but that chip remains untested.
 
-After these checks, use the Hub's submission page to contact its maintainer
-with the firmware name, OCKM Studio author name, repository/release link,
-identity, licence, and the hardware checks actually completed.
-The GitHub beta is for testing; it is not a claimed Hub-approved or fully
-hardware-validated release. No Hub submission has been sent.
+After these checks, contact the Hub maintainer with firmware/author names,
+repository/release, identity, licence and the hardware results actually completed.
+No Hub submission has been sent. This is a beta, not a Hub-approved release.

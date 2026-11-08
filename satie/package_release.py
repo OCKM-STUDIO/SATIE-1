@@ -41,8 +41,9 @@ GLO opens the guide. Read QUICK-START.txt for the controls and saved-track recal
 The pad-clicking fix preserves tone and envelope values across audio blocks.
 The maker confirmed the Ibiza Chill clicking is fixed on a real FM-1.
 
-This candidate passed native/UI/audio, preview and package-update checks.
-It has NOT yet completed the Hub's required hardware installation routes.
+The 0.1.2-dev candidate passed the mood-label check and PERF-1 round-trip.
+Earlier 0.1.1-beta tests covered stock V15, audio and saved-favourite recall.
+This exact beta still needs final hardware routes and interrupted-update recovery.
 See SHARING.txt for the remaining hardware checks before a Hub submission.
 Source and beta releases: https://github.com/OCKM-STUDIO/SATIE-1
 

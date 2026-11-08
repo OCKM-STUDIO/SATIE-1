@@ -8,6 +8,7 @@
 #define LEGACY_SCORE_MAGIC 0x31484342u /* previous favourite layout */
 #define SATIE_MOODS 5
 #define SATIE_PAGES 8
+enum { SATIE_PENDING_TRACK = 1, SATIE_PENDING_MOOD };
 static const char *const SATIE_PAGE[SATIE_PAGES] = {"HOME", "LEAD", "BASS", "DRUMS", "LAYERS", "COLOUR", "DELAY", "SPACE"};
 static const char *const SATIE_LABEL[SATIE_PAGES][4] = {
     {"TEMPO","ENERGY","EVOLVE","MIX"}, {"TONE","CHAR","SPACE","LEVEL"},
@@ -344,8 +345,11 @@ static void satie_apply(void)
 
 static void satie_request(void)
 {
-    satie_ui.pending = 1;
-    say("NEW TRACK", en_playing ? "NEXT BAR" : "READY");
+    const int mood_only = satie_ui.requested.mood != satie_ui.current.mood &&
+        satie_ui.requested.source == satie_ui.current.source &&
+        satie_ui.requested.seed == satie_ui.current.seed;
+    satie_ui.pending = mood_only ? SATIE_PENDING_MOOD : SATIE_PENDING_TRACK;
+    say(mood_only ? "NEW MOOD" : "NEW TRACK", en_playing ? "NEXT BAR" : "READY");
 }
 
 /* A single composer: SEL goes straight to collections, then tunes. */
@@ -480,7 +484,8 @@ static void satie_input(void)
 
     if (pressed & (1u << B_SAVE)) {
         if (satie_ui.pending) {
-            say("WAIT FOR NEW TRACK", "THEN PRESS SAVE");
+            say(satie_ui.pending == SATIE_PENDING_MOOD ? "WAIT FOR NEW MOOD" : "WAIT FOR NEW TRACK",
+                "THEN PRESS SAVE");
         } else if (!plat_store_locked()) {
             satie_ui.saving = satie_ui.current;
             satie_ui.store_wait = 1;
@@ -672,7 +677,8 @@ static void satie_draw(void)
     }
 
     if (satie_ui.pending)
-        text_c(120, 90, &FONT_XS, "NEW TRACK ON NEXT BAR", accent);
+        text_c(120, 90, &FONT_XS, satie_ui.pending == SATIE_PENDING_MOOD ?
+            "NEW MOOD ON NEXT BAR" : "NEW TRACK ON NEXT BAR", accent);
     else if (plat_ms() < ui.msg_until)
         text_c(120, 90, &FONT_XS, ui.msg[0], accent);
     else

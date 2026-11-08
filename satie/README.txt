@@ -1,4 +1,4 @@
-SATIE-1 — Erik. Evolved. — 0.1.1-beta
+SATIE-1 — Erik. Evolved. — 0.1.2-beta
 ===============================
 Satie's piano scores, reimagined as an evolving electronic working soundtrack.
 Default: Gymnopedie 1 / Orbit / 60 BPM / Energy 50 / Evolve 35 / Mix 42 (Duet).
@@ -162,3 +162,10 @@ audio after the fix. Score, page/control, audio limits, browser, installer,
 update-entry and loader regression checks pass. Device image: 421060 bytes;
 RAM 92332/98304 bytes; pool 331176/344064 bytes.
 See SHARING.txt for installation routes completed and still outstanding.
+
+0.1.2-beta — MOOD MESSAGE AND HARDWARE TEST RECORD, 2026-11-08
+Mood-only changes say NEW MOOD ON NEXT BAR, including the wait-before-save
+message. Tune/seed changes retain NEW TRACK, including a queued tune change
+followed by a mood change. Audio and update-loader code are unchanged.
+The maker confirmed the wording and PERF-1 round-trip with 0.1.2-dev.
+See SHARING.txt for the completed tests and exact-release checks still pending.

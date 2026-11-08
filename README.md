@@ -6,7 +6,7 @@
 
 By [OCKM Studio](https://github.com/OCKM-STUDIO).
 
-[Download the beta](https://github.com/OCKM-STUDIO/SATIE-1/releases/tag/v0.1.1-beta)
+[Download the beta](https://github.com/OCKM-STUDIO/SATIE-1/releases/tag/v0.1.2-beta)
 · [Quick guide](satie/QUICK-START.txt)
 
 I've kept it simple: choose a tune, choose a mood, and let the music evolve while
@@ -51,7 +51,7 @@ For the existing USB installer, install Python dependencies `mido` and
 `python-rtmidi`, then run from the source folder:
 
 ```sh
-python3 tools/fm1_install.py satie-1-0.1.1-beta.fwsc
+python3 tools/fm1_install.py satie-1-0.1.2-beta.fwsc
 ```
 
 Or select the package in a compatible FM-1 web installer. Keep USB connected
@@ -60,18 +60,19 @@ firmware: SATIE-1 does not import other firmwares' projects or samples, and
 switching firmware may overwrite shared flash storage. It migrates older
 SATIE-1 favourites and the earlier development build's Satie choices.
 
-**Status:** 0.1.1-beta. The maker confirmed on a real FM-1 that the listening-test build
-fixes Ibiza Chill's background clicking, which became more pronounced as Mix
-increased. Pad tone and envelope values now persist across audio-block boundaries.
+**Status:** 0.1.2-beta, the final candidate for Hub recovery testing. Mood changes
+now say NEW MOOD ON NEXT BAR; tune changes and new tracks retain NEW TRACK.
+The sound engine and update loader are unchanged from 0.1.1-beta.
 
-Stock V15 → SATIE-1 0.1.0-beta and the subsequent update to 0.1.1-beta have
-been tested. Direct V15 → 0.1.1-beta, installation from another custom firmware,
-and leaving SATIE-1 through a normal installer remain to be recorded. The final
-release also corrects pad-state clearing on reset; that additional correction
-has automated memory checks but has not yet been retested on the device. An earlier
-return to V15 stopped at the protected boot-area check; V15 was restored with
-M-Flasher. That recovery does not count as a normal exit test. See
-[hardware test status](satie/SHARING.txt) for the remaining Hub checks.
+On the maker's original Puya-chip FM-1, the normal stock V15 round-trip,
+Ibiza Chill audio and SAVE followed by power-off/on passed with 0.1.1-beta.
+The 0.1.2-dev candidate passed the mood-label check and SATIE → PERF-1 → SATIE
+through normal installers (PERF-1 version not recorded). This beta changes
+the candidate's version label and documentation; its exact release file still
+needs interrupted-update recovery and the final installation-route checks.
+An earlier V15 return failed before writing; after restoring the stock bootloader
+with M-Flasher, the normal V15 return succeeded. See
+[hardware test status](satie/SHARING.txt) for the detailed record.
 
 The device identity is `FM-1_9980100`; no exact or pattern collision was found
 among 161 entries in the Firmware Hub catalogue on 2026-11-08. This is an
@@ -82,12 +83,12 @@ availability check, not a reservation or a Hub listing.
 Use the JieLi toolchain and AC79 SDK described in [BUILDING.md](BUILDING.md):
 
 ```sh
-EN_SATIE1=1 sh build.sh --release 0.1.1-beta
+EN_SATIE1=1 sh build.sh --release 0.1.2-beta
 sh satie/build_host.sh
 sh satie/build_preview.sh
 ```
 
-The package is `build/satie-1-0.1.1-beta.fwsc`. The host uses a native C compiler;
+The package is `build/satie-1-0.1.2-beta.fwsc`. The host uses a native C compiler;
 the preview uses the WASI SDK. Source score and artwork data are checked in.
 To regenerate them, run `satie/generate.py` (mido) and `satie/gen_art.py` (Pillow).
 The startup portrait is stored in flash and reuses the screen canvas.
