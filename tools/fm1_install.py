@@ -246,9 +246,9 @@ def handshake(link, tries=3):
         if ident is None:
             continue
         num = ident.text.split("_", 1)[1]
-        if len(num) != 3 or num[0] != "7":       # stock, the loader, an older PERF-1: as it answered
+        if len(num) != 3 or (num[0] != "7" and num != "998"):  # PERF-1 and SATIE-1 use the extended query
             return ident
-        full = ask(link, HS_FULL, 0.6)          # "FM-1_700": PERF-1 0.16.13 and later tell their version this way
+        full = ask(link, HS_FULL, 0.6)          # obtain the complete package identity, retaining the legacy fallback
         return full if full and full.model == ident.model else ident
     return None
 

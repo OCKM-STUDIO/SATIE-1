@@ -1,4 +1,4 @@
-SATIE-1 — Erik. Evolved. — 0.1.0-beta
+SATIE-1 — Erik. Evolved. — 0.1.1-beta
 ===============================
 Satie's piano scores, reimagined as an evolving electronic working soundtrack.
 Default: Gymnopedie 1 / Orbit / 60 BPM / Energy 50 / Evolve 35 / Mix 42 (Duet).
@@ -117,13 +117,13 @@ Output: build/satie-1-dev.fwsc. Private development identity FM-1_9980100.
 The identity is retained for the same FM-1 development update path.
 Install from the repository directory using:
     .venv/bin/python tools/fm1_install.py build/satie-1-dev.fwsc
-No automatic hardware update is performed. This build needs on-device listening.
+No automatic hardware update is performed. See SHARING.txt for hardware test results.
 
 CREDITS
 Score editions and derivative note data: public domain / CC-BY-SA-4.0.
 Program: GPL-3.0-only, based on PERF-1 / HYP-1 / AMB-1. See ../LICENSING.md.
 
-VALIDATED 2026-11-08 — instrument and FX pages
+EARLIER VALIDATION — 0.1.0-beta, 2026-11-08
 All 10 full reduced lead lines match the audio-clock MIDI output. Slow full
 arrangements have bounded output and quiet pause tails. Collection navigation,
 cancellation, next-bar selection, all five moods, Mix, Hold and New track pass.
@@ -144,5 +144,21 @@ GLO opens eight short instruction pages; SELECT/ALGO turns, SEL advances.
 The final page recalls Keep with SEL. HOME/GLO closes. Reading preserves sound
 settings and playback. Erik portrait at startup; a button skips it.
 Ibiza Chill: inherited pad chorus and house pumping removed, echo modulation
-steadied. Needs listening confirmation on the device for the reported warble.
+steadied. Those changes alone did not resolve the reported clicking.
 See QUICK-START.txt and SHARING.txt for the shareable beta and portal status.
+
+0.1.1-beta — PAD CLICKING FIX, 2026-11-08
+Pad target amplitude, FM index and attack smoothing now persist between audio
+chunks until the next 32-sample control tick. Resetting them at each chunk
+created discontinuities, most audible in Ibiza Chill as Mix brought up the pad.
+The maker installed the listening candidate and confirmed the clicking is fixed.
+Final review also corrected pad-state clearing on reset. Address/undefined-
+behaviour sanitizer checks cover reset and all thirty partition cases. The
+final rebuilt package still needs its on-device installation-route checks.
+The Python installer also requests SATIE-1's complete FM-1_9980100 identity,
+avoiding a false mismatch after a successful installation.
+Thirty held-pad partition tests (five sounds, six block sizes) produce identical
+audio after the fix. Score, page/control, audio limits, browser, installer,
+update-entry and loader regression checks pass. Device image: 421060 bytes;
+RAM 92332/98304 bytes; pool 331176/344064 bytes.
+See SHARING.txt for installation routes completed and still outstanding.

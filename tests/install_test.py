@@ -102,7 +102,7 @@ class FakeFM1:
         self.tx(b"\xF0" + I.pack7(bytes([0, 0x59, 0x11, 0, 0, 0]) + t + bytes(28 - len(t))) + b"\xF7")
 
     def rx(self, d):
-        perf = self.identity.startswith("FM-1_7") and len(self.identity) > 8   # PERF-1 0.16.13 on: short to the plain query
+        perf = self.identity.startswith(("FM-1_7", "FM-1_998")) and len(self.identity) > 8
         if d == I.HS_QUERY:
             self.ident(self.identity[:8] if perf else self.identity)
         elif I.HS_FULL is not None and d == I.HS_FULL:
@@ -206,6 +206,11 @@ def installs():
        "install: PERF-1 answers FM-1_700 to the plain query (M-UPGRADE 3.11), its whole identity to HS_FULL")
 
     raw10 = package("FM-1_9001000")
+    satie = package("FM-1_9980100")
+    dev = FakeFM1(I.logical_image(satie), identity="FM-1_9980100", after_write="FM-1_9980100")
+    rc, out, err = cli([pkgfile("satie.fwsc", satie), "--yes"], dev)
+    ok(rc == 0 and dev.bad == 0 and "done: the FM-1 runs FM-1_9980100" in out,
+       "install: SATIE-1 short handshake expands to its complete identity after reboot")
     dev = FakeFM1(I.logical_image(raw10), identity="FM-1_909", after_write="FM-1_9001000")
     rc, out, err = cli([pkgfile("x10.fwsc", raw10), "--yes"], dev)
     ok(rc == 0 and dev.bad == 0 and "done: the FM-1 runs FM-1_9001000" in out,

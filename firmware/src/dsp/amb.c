@@ -1502,8 +1502,10 @@ typedef struct {
     uint8_t pnote;                              /* the key that plays it */
     uint32_t pord;                              /* when it was played (the oldest is taken first) */
     float pamp;                                 /* a played note's envelope, 0..1 */
+    float ctl_target, ctl_index, ctl_attack;    /* held between 32-sample control ticks, including across chunks */
 } pad_t;
 static pad_t pad[EN_NPAD];
+static uint32_t pad_ctl[EN_NPAD];              /* 32-sample control clock, continuous across render chunks */
 static float pad_gate, pad_gain, pad_vol, bright, detune = 0.00144f;
 static const float PAD_PAN[EN_NPAD] = {-0.55f, -0.18f, 0.18f, 0.55f};
 static const float BREATH[EN_NPAD] = {1.0f, 1.21f, 1.43f, 1.67f};    /* unequal cycles, as 2/1's 12..20 s loops */
@@ -4584,8 +4586,11 @@ static void quiet(void)
     for (i = 0; i < EN_NDRUM; i++)
         drum[i].on = 0, drum[i].wait = 0, drum[i].rn = 0;
     cm_wait = ac_wait = bl_wait = stab_wait = 0;
-    for (i = 0; i < EN_NPAD; i++)
+    for (i = 0; i < EN_NPAD; i++) {
         pad[i].amp = 0.0f;
+        pad[i].ctl_target = pad[i].ctl_index = pad[i].ctl_attack = 0.0f;
+        pad_ctl[i] = 0;
+    }
     bass.amp = 0.0f;
 #ifdef EN_SATIE1
     satie_sub.env = satie_sub.amp = satie_sub.low = 0.0f;
@@ -4641,6 +4646,8 @@ void en_init(void)
         pad[i].note = pad[i].target = (float)(50 + 7 * i);
         pad[i].pan = PAD_PAN[i];
         pad[i].amp = 0.0f;
+        pad[i].ctl_target = pad[i].ctl_index = pad[i].ctl_attack = 0.0f;
+        pad_ctl[i] = 0;
         pad[i].ph[0] = 0.0f;
         pad[i].ph[1] = 0.37f;
         pad[i].ph[2] = 0.61f;
@@ -6351,7 +6358,7 @@ static float dsn_l[BLK], dsn_r[BLK];            /* the mix before the drums (the
  * Synthi's filter below half, then tape). No chorus: a modulated delay against pure tones beats (on
  * the FM-1's speaker above all), and that read as pulsing. The width comes from the voices' places,
  * the echo's two heads and the plate. */
-static uint32_t pad_ctl[EN_NPAD], ac_ctl;      /* the control steps' counts (every 32 samples), kept across chunks */
+static uint32_t ac_ctl;                      /* the acid's control clock, kept across chunks */
 #ifndef EN_SATIE1
 static uint32_t dr_ctl;
 #endif
@@ -6470,7 +6477,8 @@ static void render_pad(uint32_t n)
     for (i = 0; i < EN_NPAD; i++) {
         pad_t *v = &pad[i];
         float p0 = v->ph[0], p1 = v->ph[1], p2 = v->ph[2], p3 = v->ph[3], ps = v->sub, amp = v->amp,
-              s0 = v->ic[0], s1 = v->ic[1], s2 = v->ic[2], s3 = v->ic[3], gl, gr, pn, tgt = 0.0f, idx = 0.0f, se = stab_env, ar = 0.01f;
+              s0 = v->ic[0], s1 = v->ic[1], s2 = v->ic[2], s3 = v->ic[3], gl, gr, pn,
+              tgt = v->ctl_target, idx = v->ctl_index, se = stab_env, ar = v->ctl_attack;
         const int saw = v->voices == PO_STRINGS || v->voices == PO_SUPER || v->voices == PO_PWM;   /* the saw sounds: a sub and the sweep filter */
         uint32_t j;
         if (amp < 1e-5f && pad_gain < 1e-4f && !v->play) {
@@ -6611,6 +6619,9 @@ static void render_pad(uint32_t n)
         v->ic[2] = fm_flush(s2);
         v->ic[3] = fm_flush(s3);
         v->amp = amp;
+        v->ctl_target = tgt;
+        v->ctl_index = idx;
+        v->ctl_attack = ar;
         v->ph[0] = p0;
         v->ph[1] = p1;
         v->ph[2] = p2;

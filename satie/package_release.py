@@ -38,8 +38,8 @@ The Python USB installer is inside the source ZIP: tools/fm1_install.py.
 Do not unplug while it writes. Back up projects before changing firmware.
 
 GLO opens the guide. Read QUICK-START.txt for the controls and saved-track recall.
-The Ibiza Chill change removes inherited chorus, pumping and echo movement.
-Please confirm it clears the reported interference on your device.
+The pad-clicking fix preserves tone and envelope values across audio blocks.
+The maker confirmed the Ibiza Chill clicking is fixed on a real FM-1.
 
 This candidate passed native/UI/audio, preview and package-update checks.
 It has NOT yet completed the Hub's required hardware installation routes.
