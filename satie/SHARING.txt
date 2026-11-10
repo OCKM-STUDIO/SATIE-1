@@ -50,8 +50,24 @@ SHA256: 1714f65080b5f3adef44afa84b3287b2a06f2e3299d8f709b0d5fff0f6cc1d46
 The release name, preview and documentation changed; firmware bytes did not.
 The trace2 listening evidence therefore applies to this exact package.
 
-EXACT CANDIDATE CHECKS STILL REQUIRED
-Follow FINAL-CHECKS.txt with satie-1-0.1.3-beta.fwsc. Record the exact package
-checksum, installation paths, playing stability, saved favourite and recovery.
-Keep results for earlier builds distinct. No Hub submission has been sent.
-Do not describe this as a confirmed crash fix or a Hub-approved release.
+FINAL 0.1.3-BETA HARDWARE RESULTS
+All planned final checks passed on the candidate package identified below.
+- All five moods played without clicking or reboot; Ghost at high Mix and
+  rapid Gymnopedie 1/2 changes passed (maker listening report).
+- A 30-second diagnostic capture confirmed both cores online, with no crashes,
+  underruns, late renders or restart during capture.
+- SAVE and fully disconnected cold-start recall restored tune, mood and an
+  edited setting, with clean startup (maker report).
+- SATIE -> stock V15 -> SATIE passed; clean startup, no clicking or reboot.
+- SATIE -> PERF-1 -> SATIE passed; clean startup and track changes. The PERF-1
+  version was not recorded.
+- Interrupted normal SATIE update recovered by rerunning the same installer;
+  clean startup, Ghost at high Mix and track changes passed (maker report).
+These hardware reports supplement the monitored trace2 evidence above.
+GitHub build 42772246077 passed; its downloaded firmware attestation verified
+against zvenson/fm1-build, and its bytes match the tested package exactly.
+No new audio or update code was introduced after the device tests.
+
+PUBLICATION
+The final beta is being submitted for Hub review. Passing these checks is not
+Hub approval or proof that the earlier intermittent fault's cause is resolved.

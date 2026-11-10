@@ -60,7 +60,7 @@ firmware: SATIE-1 does not import other firmwares' projects or samples, and
 switching firmware may overwrite shared flash storage. It migrates older
 SATIE-1 favourites and the earlier development build's Satie choices.
 
-**Status:** 0.1.3-beta candidate, based on the monitored 0.1.3-trace2 build.
+**Status:** 0.1.3-beta, based on the monitored 0.1.3-trace2 build.
 It retains the crash diagnostics and a defensive audio-worker completion fix.
 Sounds, controls, saved-setting format and update-loader logic match trace2.
 
@@ -72,11 +72,11 @@ underruns, and no new timing overruns. A laptop-sleep gap was excluded; the fina
 power cycle was intentional. The short high-Mix/track-change test also passed.
 
 The 0.1.3-beta firmware package is byte-for-byte identical to the tested trace2
-package, so those listening results apply to it. Final installation-route,
-post-update startup, saved-favourite and recovery checks remain before publication
-and Hub submission.
-Earlier versions passed stock V15 and PERF-1 round-trips. Interrupted installation
-resumed on 0.1.2-beta, but noisy startup and a reboot prevented a clean pass.
+package, so those listening results apply to it. Final checks passed on this
+package: all five moods, Ghost at high Mix with rapid track changes, saved-favourite
+recall after a cold start, stock V15 and PERF-1 round-trips, and interrupted-update
+recovery followed by clean startup and track changes. The PERF-1 version was not
+recorded. The Hub submission is for review; this is not a Hub approval.
 See the [hardware test status](satie/SHARING.txt) for the full record.
 
 The full device/package identity is `FM-1_9980100`; no listed package reports
