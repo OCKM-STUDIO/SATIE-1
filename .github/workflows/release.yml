@@ -13,7 +13,18 @@ jobs:
       build: EN_SATIE1=1 sh build.sh --release "${GITHUB_REF_NAME#v}"
       packages: build/satie-1-*.fwsc
       test: |
+        export UBSAN_OPTIONS=halt_on_error=1
         mkdir -p build/host
         cc -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer -ffp-contract=off -std=c99 -DEN_HOST -DEN_SATIE1 -Ifirmware/src -Ifirmware/src/dsp satie/pad_continuity_test.c -lm -o build/host/pad_continuity_test
         build/host/pad_continuity_test
+        cc -O1 -g -fsanitize=address,undefined,float-cast-overflow -fno-omit-frame-pointer -ffp-contract=off -std=c99 -DEN_HOST -DEN_SATIE1 -Ifirmware/src -Ifirmware/src/dsp satie/drum_stress_test.c -lm -o build/host/drum_stress_test
+        build/host/drum_stress_test
+        cc -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer -ffp-contract=off -std=c99 -DEN_HOST -DEN_SATIE1 -Ifirmware/src -Ifirmware/src/dsp satie/core_stage_test.c -lm -o build/host/core_stage_test
+        python3 - <<'PY'
+        import subprocess
+        results = [subprocess.check_output(['build/host/core_stage_test', str(mode)], timeout=10) for mode in (0, 2, 3)]
+        assert len(set(results)) == 1, results
+        PY
+        python3 -m pip install mido
+        python3 satie/test_bootlog.py
         python3 tests/install_test.py

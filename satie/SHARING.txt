@@ -1,48 +1,57 @@
-SATIE-1 — OCKM Studio — The Firmware Hub preparation
-====================================================
+SATIE-1 — OCKM Studio — Firmware Hub preparation
+================================================
 Repository: https://github.com/OCKM-STUDIO/SATIE-1
-Beta tag: v0.1.2-beta
+Candidate: v0.1.3-beta, prepared 2026-11-10
 Target: https://thefirmwarehub.com/submit/
-Requirements checked 2026-11-08 against the submission page and fmhub.md.
 
-BETA RELEASE
-- SATIE-1 0.1.2-beta firmware package, with update loader.
-- Public source and licences at the matching release tag, plus a source ZIP.
-- Identity FM-1_9980100: no exact or pattern match among the catalogue's 161
-  firmwares on 2026-11-08. Not a reservation or confirmed Hub listing.
-- fmhub.json: OCKM Studio author, description, groove category, lavender accent.
-- Card: 1024-square JPEG under 300 KB; master PNG and 240-square startup art.
-- Self-contained listening preview and quick-start guide.
-- GPL-3.0-only firmware code with upstream notices; separate score/art credits.
-- Tag-triggered release workflow uses the Hub's shared build workflow.
-  Check the actual Actions run and attestations for any downloaded firmware;
-  a locally built package does not acquire an attestation by being uploaded.
+RELEASE MATERIALS
+- Firmware identity FM-1_9980100, with update loader. No listed package has
+  that exact product identity (172 entries checked 2026-11-10). Legacy broad
+  patterns can match the short FM-1_998 reply; specify the full identity.
+- Complete GPL-3.0-only firmware source at the release tag; score/art licences
+  and upstream attribution are separate and preserved.
+- fmhub.json: OCKM Studio, groove category, description, 1024-square JPEG
+  under 300 KB, lavender accent. Listening preview and quick guide in bundle.
+- GitHub's shared fm1-build workflow builds/signs the package from source.
+  Verify the downloaded build, its attestation and checksums before publication.
+- Original Puya flash (0x856014) tested. New UC25HQ80 (0xB36014) recognised
+  in software but not physically tested here. Loader uses common SPI commands.
 
-HARDWARE RESULTS — 2026-11-08
-- Original Puya flash (0x856014), observed in M-Flasher.
-- Stock V15 -> SATIE-1 0.1.0-beta and update to the 0.1.1 listening candidate passed.
-- SATIE-1 -> stock V15 -> final 0.1.1-beta through normal installers: passed.
-- Ibiza Chill clicking fixed; maker confirmed the final 0.1.1-beta sounds good.
-- SAVE followed by power-off/on restores tune, mood and edits: passed on 0.1.1-beta.
-  Startup restores the saved favourite, not unsaved changes.
-- Mood wording and SATIE-1 -> PERF-1 -> SATIE-1: passed with 0.1.2-dev.
-  PERF-1 version not recorded. These are candidate tests, not exact-beta tests.
-- An earlier normal V15 return stopped after 35 reads, before writing. After
-  M-Flasher restored V15 and its stock bootloader, the normal retry succeeded.
-- 0.1.2-beta has the candidate's firmware logic with a beta version label.
-  No audio, storage or updater changes since the tested candidate.
+EARLIER HARDWARE RESULTS — 8 NOVEMBER
+- Stock V15 -> SATIE-1 and SATIE -> stock V15 -> SATIE passed with earlier betas.
+- An initial stock return stopped after 35 reads before any write. After
+  M-Flasher restored V15 and the stock bootloader, the normal retry passed.
+- Ibiza Chill clicking fixed; confirmed on final 0.1.1-beta.
+- SAVE then power-off/on restored tune, mood and edits on 0.1.1-beta.
+- Mood wording and SATIE -> PERF-1 -> SATIE passed with 0.1.2-dev.
+  The PERF-1 version was not recorded.
+- Interrupted 0.1.2-beta installation resumed, but severe clicking followed by
+  a reboot on startup prevented a clean recovery pass. Similar faults occurred
+  with Ghost at high Mix and rapid Gymnopedie 1/2 changes.
 
-BEFORE A HUB SUBMISSION
-Use the exact 0.1.2-beta release file for final installation-route checks
-(V15 -> SATIE, other custom -> SATIE, SATIE -> other custom), USB identification
-and interrupted-update recovery. Recovery has NOT yet been tested on hardware.
-For a controlled USB-interruption test, charge the battery, keep the FM-1
-powered on and retain a full M-Flasher backup. Interrupt only a normal firmware
-installation at its writing stage; never interrupt M-Flasher/bootloader writes.
-Reconnect and rerun the same package through the normal installer. Record its
-output and whether the loader resumes and returns to playable SATIE.
-The new UC25HQ80 flash ID is recognised in software, but that chip remains untested.
+DIAGNOSTIC BUILD — 9 NOVEMBER
+- 0.1.3-trace2 short monitored test: about three minutes, Ghost at high Mix,
+  track changes reported clean; both cores online, no new late renders,
+  no underruns, no recorded crashes or unexpected reboot.
+- Longer capture: about 4h32 of observed playing time; both cores online,
+  no recorded crashes or underruns, no increase in late-render counter.
+- About 1h36 without telemetry during laptop sleep is excluded from that time.
+- The final 23:15 power-on was confirmed intentional by the maker.
+- The earlier trace build's 5h34 capture ran in single-core fallback after a
+  prior crash; it is NOT counted as a normal-operation pass.
 
-After these checks, contact the Hub maintainer with firmware/author names,
-repository/release, identity, licence and the hardware results actually completed.
-No Hub submission has been sent. This is a beta, not a Hub-approved release.
+KNOWN LIMITATION
+The cause of the earlier intermittent clicking/reboot is not confirmed. The
+completed-job stage-wait fix addresses a reproduced host-side failure but did
+not stop every hardware failure. Trace2 changed instrumentation and subsequently
+ran clean; that is evidence of a clean test, not proof of a root-cause fix.
+0.1.3-beta is byte-for-byte identical to the tested trace2 firmware package.
+SHA256: 1714f65080b5f3adef44afa84b3287b2a06f2e3299d8f709b0d5fff0f6cc1d46
+The release name, preview and documentation changed; firmware bytes did not.
+The trace2 listening evidence therefore applies to this exact package.
+
+EXACT CANDIDATE CHECKS STILL REQUIRED
+Follow FINAL-CHECKS.txt with satie-1-0.1.3-beta.fwsc. Record the exact package
+checksum, installation paths, playing stability, saved favourite and recovery.
+Keep results for earlier builds distinct. No Hub submission has been sent.
+Do not describe this as a confirmed crash fix or a Hub-approved release.

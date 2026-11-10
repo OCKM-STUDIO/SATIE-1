@@ -52,6 +52,10 @@ struct en_dbg {
     uint32_t last_us, cpu_q8, boots, stage;
     uint32_t crash_seen;                            /* the crash count already reported at a boot */
 } en_dbg __attribute__((section(".noinit")));
+#ifdef EN_SATIE1
+extern volatile uint32_t *en_satie_trace;
+static uint32_t previous_audio_stage, previous_in_audio;
+#endif
 static uint8_t safe_mode;                           /* two failed boots: no audio, USB on (safe_main) */
 static volatile uint32_t tel_isr_in, tel_isr_out;   /* telemetry: ticks in the timer interrupt while a render ran (it nests into it) and outside it */
 static volatile uint32_t tel_hist[9];                  /* telemetry: renders by time: <5 ms, 5-6, ... 11-12, >= 12 ms */
@@ -585,6 +589,80 @@ static void tel_service(void)
     static uint8_t on, extra;
     static uint32_t until, next, seq;
     uint8_t r = usb.tel_req;
+#if defined(EN_SATIE1) && EN_CORE2
+    if (r == 5u) {
+        uint32_t w[40] = {0}, i, n;
+        uint8_t b[sizeof w], f[4 + (sizeof w * 8 + 6) / 7 + 1];
+        _Static_assert(sizeof f <= 192, "exception diagnostics fit the USB queue");
+        _Static_assert(sizeof(fm1_crash_t) == 16u * sizeof(uint32_t), "exception wire layout");
+        w[0] = 1; /* exception schema; separate from the periodic boot frame */
+        if (fm1_crash.magic == FM1_CRASH_MAGIC) {
+            /* Copy the struct as bytes: do not alias a struct as a word array. */
+            const uint8_t *c = (const uint8_t *)&fm1_crash;
+            for (i = 0; i < 16u; i++)
+                w[1+i] = (uint32_t)c[4*i] | (uint32_t)c[4*i+1] << 8 |
+                         (uint32_t)c[4*i+2] << 16 | (uint32_t)c[4*i+3] << 24;
+            if (satie_fault_context.magic == SATIE_FAULT_MAGIC &&
+                satie_fault_context.count == fm1_crash.count) {
+                for (i = 0; i < 16u; i++) w[17+i] = satie_fault_context.regs[i];
+                w[33] = satie_fault_context.worker_count;
+                w[34] = satie_fault_context.worker_pc;
+                w[35] = satie_fault_context.worker_dbg;
+                w[36] = satie_fault_context.worker_emu;
+                w[37] = satie_fault_context.raw_dbg;
+                w[38] = satie_fault_context.raw_emu;
+                w[39] = satie_fault_context.cpu + 1u; /* zero: no matching context */
+            }
+        }
+        for (i = 0; i < 40u; i++) {
+            b[4*i] = (uint8_t)w[i]; b[4*i+1] = (uint8_t)(w[i] >> 8);
+            b[4*i+2] = (uint8_t)(w[i] >> 16); b[4*i+3] = (uint8_t)(w[i] >> 24);
+        }
+        f[0] = 0xF0; f[1] = 0x7D; f[2] = 0x50; f[3] = 0x5D;
+        n = 4 + ota_pack7(b, sizeof b, f + 4); f[n++] = 0xF7;
+        if (!usb_sysex_try(f, n)) usb.tel_req = 0;
+        return;
+    }
+    if (r == 4u) {
+        uint32_t w[36] = {0}, i, n;
+        uint8_t b[sizeof w], f[4 + (sizeof w * 8 + 6) / 7 + 1];
+        _Static_assert(sizeof f <= 192, "boot diagnostics fit the USB queue");
+        w[0] = 2; /* diagnostic schema */
+        w[1] = fm1_ms;
+        w[2] = fm1_boot.p3_rst;
+        w[3] = fm1_boot.rst_src;
+        w[4] = fm1_boot.wdt_con;
+        w[5] = bootguard.failed;
+        w[6] = bootguard.pending;
+        w[7] = en_dbg.boots;
+        w[8] = fm1_core1_barred();
+        w[9] = fm1_core1_online();
+        w[10] = aw.timeouts;
+        w[11] = aw.rejected;
+        w[12] = fm1_core1_fault.count;
+        w[13] = fm1_core1_fault.pc;
+        w[14] = fm1_core1_fault.dbg;
+        w[15] = fm1_core1_fault.emu;
+        w[16] = fm1_crash.magic == FM1_CRASH_MAGIC ? fm1_crash.count : 0;
+        w[17] = fm1_crash.magic == FM1_CRASH_MAGIC ? fm1_crash.pc : 0;
+        w[18] = fm1_crash.magic == FM1_CRASH_MAGIC ? fm1_crash.dbg : 0;
+        w[19] = fm1_crash.magic == FM1_CRASH_MAGIC ? fm1_crash.emu : 0;
+        if (satie_core1_last[0] == 0x53434431u)
+            for (i = 0; i < 12; i++) w[20 + i] = satie_core1_last[i];
+        w[32] = previous_audio_stage;
+        w[33] = previous_in_audio;
+        w[34] = en_dbg.stage;
+        w[35] = en_dbg.in_audio;
+        for (i = 0; i < 36; i++) {
+            b[4*i] = (uint8_t)w[i]; b[4*i+1] = (uint8_t)(w[i] >> 8);
+            b[4*i+2] = (uint8_t)(w[i] >> 16); b[4*i+3] = (uint8_t)(w[i] >> 24);
+        }
+        f[0] = 0xF0; f[1] = 0x7D; f[2] = 0x50; f[3] = 0x5C;
+        n = 4 + ota_pack7(b, sizeof b, f + 4); f[n++] = 0xF7;
+        if (!usb_sysex_try(f, n)) usb.tel_req = 0;
+        return;
+    }
+#endif
     if (r == 3u) {                                  /* the bench, once */
         uint32_t w[16], i;
         uint8_t f[4 + 16 * 5 + 2], b[16 * 4];
@@ -787,6 +865,9 @@ static void fm1_main(void)
     panel_init();
     led_pos_init();
     en_init();
+#ifdef EN_SATIE1
+    en_satie_trace = &en_dbg.stage;
+#endif
     en_prof_clock = prof_clk;
 #if EN_CORE2
     en_core2_attach(fm1_core1_submit, fm1_core1_join, fm1_core1_fence, fm1_core1_alive);   /* the reverb runs on CPU1 while it is online */
@@ -908,6 +989,10 @@ static void fm1_main(void)
 void fm1_cstart(void)
 {
     uint32_t *s, *d, p3, src, wdt;
+#ifdef EN_SATIE1
+    const uint32_t old_stage = en_dbg.magic == DBG_MAGIC ? en_dbg.stage : 0;
+    const uint32_t old_in_audio = en_dbg.magic == DBG_MAGIC ? en_dbg.in_audio : 0;
+#endif
     fm1_time_init();
     fm1_reset_reason();
     p3 = fm1_boot.p3_rst;
@@ -958,6 +1043,10 @@ void fm1_cstart(void)
     fm1_guard_enable(FM1_GUARD_STACK | FM1_GUARD_WRITE | FM1_GUARD_BUS | FM1_GUARD_PC);
 #endif
     safe_mode = (uint8_t)(p3 >> 8);
+#ifdef EN_SATIE1
+    previous_audio_stage = old_stage;
+    previous_in_audio = old_in_audio;
+#endif
     fm1_boot.p3_rst = (uint8_t)p3;
     fm1_boot.rst_src = src;
     fm1_boot.wdt_con = (uint8_t)wdt;

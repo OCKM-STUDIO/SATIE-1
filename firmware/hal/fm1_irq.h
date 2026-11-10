@@ -104,6 +104,18 @@ static void fm1_irq_enable_all(void)
  * hold. */
 static struct { volatile uint32_t count; uint32_t echoes, cpu, dbg, emu, pc, rets; } fm1_core1_fault __attribute__((unused));
 
+#ifdef EN_SATIE1
+/* Extra evidence for a fatal exception, not a recovery policy change. Read the
+ * raw flags before CPU1 handling can clear them; correlate with fm1_crash.count
+ * so an older/incomplete snapshot is never reported as this crash's context. */
+#define SATIE_FAULT_MAGIC 0x53465432u
+struct satie_fault_context {
+    uint32_t magic, count, regs[16], raw_dbg, raw_emu, cpu;
+    uint32_t worker_count, worker_pc, worker_dbg, worker_emu;
+};
+volatile struct satie_fault_context satie_fault_context __attribute__((section(".noinit.satie_fault")));
+#endif
+
 static int fm1_core1_fault_c(const uint32_t *f)   /* 1: handled, CPU0 resumes */
 {
 #if EN_CORE2
@@ -153,6 +165,9 @@ void fm1_fault_c(uint32_t *f)
 {
     static volatile uint32_t in_fault;
     uint32_t i, count, early;
+#ifdef EN_SATIE1
+    const uint32_t raw_dbg = FM1_DBG_MSG, raw_emu = FM1_EMU_MSG, cpu = fm1_cnum();
+#endif
     if (fm1_core1_fault_c(f))
         return;                                   /* a CPU1 fault: CPU0 resumes (fm1_vec.S) */
     count = fm1_crash.magic == FM1_CRASH_MAGIC ? fm1_crash.count : 0;
@@ -174,6 +189,20 @@ void fm1_fault_c(uint32_t *f)
     for (i = 0; i < 4u; i++)
         fm1_crash.etm[i] = FM1_ETM_PC(i);
     fm1_crash.early = fm1_crash.uptime_ms < 3000u ? early + 1u : 0u;
+#ifdef EN_SATIE1
+    satie_fault_context.magic = 0;
+    satie_fault_context.count = fm1_crash.count;
+    for (i = 0; i < 16u; i++) satie_fault_context.regs[i] = f[i];
+    satie_fault_context.raw_dbg = raw_dbg;
+    satie_fault_context.raw_emu = raw_emu;
+    satie_fault_context.cpu = cpu;
+    satie_fault_context.worker_count = fm1_core1_fault.count;
+    satie_fault_context.worker_pc = fm1_core1_fault.pc;
+    satie_fault_context.worker_dbg = fm1_core1_fault.dbg;
+    satie_fault_context.worker_emu = fm1_core1_fault.emu;
+    __asm__ volatile("csync" ::: "memory");
+    satie_fault_context.magic = SATIE_FAULT_MAGIC;
+#endif
     fm1_fault(&fm1_crash);
     for (;;)
         ;

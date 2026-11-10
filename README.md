@@ -6,7 +6,7 @@
 
 By [OCKM Studio](https://github.com/OCKM-STUDIO).
 
-[Download the beta](https://github.com/OCKM-STUDIO/SATIE-1/releases/tag/v0.1.2-beta)
+[Download the beta](https://github.com/OCKM-STUDIO/SATIE-1/releases/tag/v0.1.3-beta)
 · [Quick guide](satie/QUICK-START.txt)
 
 I've kept it simple: choose a tune, choose a mood, and let the music evolve while
@@ -51,7 +51,7 @@ For the existing USB installer, install Python dependencies `mido` and
 `python-rtmidi`, then run from the source folder:
 
 ```sh
-python3 tools/fm1_install.py satie-1-0.1.2-beta.fwsc
+python3 tools/fm1_install.py satie-1-0.1.3-beta.fwsc
 ```
 
 Or select the package in a compatible FM-1 web installer. Keep USB connected
@@ -60,35 +60,41 @@ firmware: SATIE-1 does not import other firmwares' projects or samples, and
 switching firmware may overwrite shared flash storage. It migrates older
 SATIE-1 favourites and the earlier development build's Satie choices.
 
-**Status:** 0.1.2-beta, the final candidate for Hub recovery testing. Mood changes
-now say NEW MOOD ON NEXT BAR; tune changes and new tracks retain NEW TRACK.
-The sound engine and update loader are unchanged from 0.1.1-beta.
+**Status:** 0.1.3-beta candidate, based on the monitored 0.1.3-trace2 build.
+It retains the crash diagnostics and a defensive audio-worker completion fix.
+Sounds, controls, saved-setting format and update-loader logic match trace2.
 
-On the maker's original Puya-chip FM-1, the normal stock V15 round-trip,
-Ibiza Chill audio and SAVE followed by power-off/on passed with 0.1.1-beta.
-The 0.1.2-dev candidate passed the mood-label check and SATIE → PERF-1 → SATIE
-through normal installers (PERF-1 version not recorded). This beta changes
-the candidate's version label and documentation; its exact release file still
-needs interrupted-update recovery and the final installation-route checks.
-An earlier V15 return failed before writing; after restoring the stock bootloader
-with M-Flasher, the normal V15 return succeeded. See
-[hardware test status](satie/SHARING.txt) for the detailed record.
+Earlier builds developed clicking followed by an unexpected reboot, particularly
+in Ghost at high Mix and during track changes. **The underlying cause has not
+been confirmed.** On 9 November, trace2 completed about 4 hours 32 minutes of
+monitored playback with both audio cores online, no recorded crashes or audio
+underruns, and no new timing overruns. A laptop-sleep gap was excluded; the final
+power cycle was intentional. The short high-Mix/track-change test also passed.
 
-The device identity is `FM-1_9980100`; no exact or pattern collision was found
-among 161 entries in the Firmware Hub catalogue on 2026-11-08. This is an
-availability check, not a reservation or a Hub listing.
+The 0.1.3-beta firmware package is byte-for-byte identical to the tested trace2
+package, so those listening results apply to it. Final installation-route,
+post-update startup, saved-favourite and recovery checks remain before publication
+and Hub submission.
+Earlier versions passed stock V15 and PERF-1 round-trips. Interrupted installation
+resumed on 0.1.2-beta, but noisy startup and a reboot prevented a clean pass.
+See the [hardware test status](satie/SHARING.txt) for the full record.
+
+The full device/package identity is `FM-1_9980100`; no listed package reports
+that exact identity among 172 entries checked on 2026-11-10. Some older catalogue
+patterns match wide ranges (including the short `FM-1_998` reply), so the Hub
+submission must specify the full identity. This check is not a reservation.
 
 ## Build
 
 Use the JieLi toolchain and AC79 SDK described in [BUILDING.md](BUILDING.md):
 
 ```sh
-EN_SATIE1=1 sh build.sh --release 0.1.2-beta
+EN_SATIE1=1 sh build.sh --release 0.1.3-beta
 sh satie/build_host.sh
 sh satie/build_preview.sh
 ```
 
-The package is `build/satie-1-0.1.2-beta.fwsc`. The host uses a native C compiler;
+The package is `build/satie-1-0.1.3-beta.fwsc`. The host uses a native C compiler;
 the preview uses the WASI SDK. Source score and artwork data are checked in.
 To regenerate them, run `satie/generate.py` (mido) and `satie/gen_art.py` (Pillow).
 The startup portrait is stored in flash and reuses the screen canvas.

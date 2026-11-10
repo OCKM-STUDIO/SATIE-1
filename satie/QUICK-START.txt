@@ -27,6 +27,15 @@ Delay offers time / repeats / tone / wet. Space shapes reverb and stereo width.
 Ibiza Chill now has a steady background: no automatic chorus or pumping.
 Choose Vinyl or Tape and raise Wobble when you want deliberate pitch movement.
 
+HOW EVOLVE WORKS
+The stored score continues while its treatment changes every eight four-beat
+bars (32 seconds at 60 BPM). The new treatment comes in over one bar. Evolve
+controls how often eligible lead notes are changed, not the section length.
+At zero, the lead follows the source notes. Higher values bring more octave,
+density and timing changes. These are programmed treatments of the original
+score, not new compositions generated from the previous variation.
+The score loops at its end: Gymnopedie 1 lasts about 2:24 at its default 60 BPM.
+
 KEEP, RECALL, HELP
 SAVE keeps one favourite, including every page. GLO opens the guide.
 Turn SELECT or ALGORITHM to read it; SEL advances a page.

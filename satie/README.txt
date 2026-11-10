@@ -1,4 +1,4 @@
-SATIE-1 — Erik. Evolved. — 0.1.2-beta
+SATIE-1 — Erik. Evolved. — 0.1.3-beta
 ===============================
 Satie's piano scores, reimagined as an evolving electronic working soundtrack.
 Default: Gymnopedie 1 / Orbit / 60 BPM / Energy 50 / Evolve 35 / Mix 42 (Duet).
@@ -169,3 +169,17 @@ message. Tune/seed changes retain NEW TRACK, including a queued tune change
 followed by a mood change. Audio and update-loader code are unchanged.
 The maker confirmed the wording and PERF-1 round-trip with 0.1.2-dev.
 See SHARING.txt for the completed tests and exact-release checks still pending.
+
+0.1.3-beta — MONITORED CANDIDATE, 2026-11-10
+Based on the 0.1.3-trace2 diagnostic build. Both audio-worker stage waits now
+accept a completed job even if its separate stage flag was missed. This fixes
+a reproduced host-side wait failure, but is NOT a confirmed explanation of the
+hardware clicking/reboot issue. Retained boot/exception and individual-drum
+traces stay enabled. The read-only USB monitor is tools/satie_bootlog.py.
+It reports fallback/restarts and streams evidence to JSONL as it arrives.
+
+On 9 November, trace2 completed about 4h32 of observed playback with both cores
+online, no recorded crashes/underruns and no new timing overruns. A laptop-sleep
+gap is excluded, and the final power cycle was confirmed intentional. The cause
+of the earlier intermittent failures remains unconfirmed. Exact 0.1.3-beta
+hardware checks are still pending; see SHARING.txt and FINAL-CHECKS.txt.

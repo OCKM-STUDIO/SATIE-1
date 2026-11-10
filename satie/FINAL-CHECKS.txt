@@ -1,0 +1,39 @@
+SATIE-1 0.1.3-beta — final hardware checks
+=========================================
+Use the exact candidate package: build/satie-1-0.1.3-beta.fwsc.
+Its bytes match the tested trace2 package; the 4h32 listening result carries
+over. These checks cover installation/startup and recovery, not another long
+soak. The release SHA256SUMS identifies its bytes. Keep the monitor stopped during
+installations so only the installer is using the MIDI port.
+
+1. Install the candidate normally. Check that Erik's portrait appears once,
+   music starts cleanly and USB identifies the FM-1 correctly. Then fully power
+   off (USB disconnected), wait ten seconds and power on for a cold baseline.
+2. Start tools/satie_bootlog.py before the listening test. Confirm both cores
+   are online after startup. Try Ghost at high Mix and rapid Gymnopedie 1/2
+   changes; check Ibiza Chill with Colour Clean. Try all five moods for a few
+   minutes and include one tune change in each. Report any clicks or restart.
+3. Choose a recognisable tune/mood and a page edit, press SAVE and wait for
+   TRACK SAVED. Switch off/on; confirm that exact tune, mood and edit return.
+4. With the recorder stopped, confirm normal installer round-trips:
+   candidate -> stock V15 -> this candidate, then
+   candidate -> PERF-1 -> this candidate. Record the PERF-1 version.
+5. Repeat interrupted-update recovery on this exact candidate with guidance.
+   Charge the battery and retain the existing full backup. Interrupt only the
+   normal firmware install's writing stage by disconnecting USB while keeping
+   the FM-1 powered on. Reconnect and retry the SAME package. Never interrupt
+   M-Flasher/bootloader writes. Confirm resumed installation, clean first boot
+   and clean track changes without an extra portrait/reboot.
+
+If a failure occurs, stop changing controls and leave the FM-1 powered and
+connected long enough to capture diagnostics. Do not repeat a failing test.
+
+Install from the FM1-OCKM folder:
+.venv/bin/python tools/fm1_install.py build/satie-1-0.1.3-beta.fwsc
+
+Short monitor (15 minutes; Ctrl+C finishes early and saves):
+.venv/bin/python tools/satie_bootlog.py --seconds 900 --out build/satie/final-beta-live.json
+
+Publication gate: review the saved evidence and honest known limitations,
+verify the signed GitHub package equals the tested package, then publish the
+beta and submit the repository/release links to the Firmware Hub maintainer.

@@ -92,6 +92,10 @@ static int fm1_core1_online(void) { return aw_online; }
 /* how much of a chunk (256 frames at 44.1 kHz = 139320 ticks of the 24 MHz timer) the job takes, in percent: the other core's load */
 static uint32_t fm1_core1_load(void) { return aw_online && aw.avg_ticks > 0 ? (uint32_t)aw.avg_ticks / 1393u : 0u; }
 static uint32_t aw_t0;                      /* when the outstanding job was submitted */
+#ifdef EN_SATIE1
+/* Diagnostic evidence retained across a watchdog/soft reset; no flash writes. */
+uint32_t satie_core1_last[12] __attribute__((section(".noinit")));
+#endif
 static void fm1_core1_fence(void) { __asm__ volatile("csync" ::: "memory"); }   /* publish memory between the cores */
 /* 1 while the outstanding job can still finish: no CPU1 fault, under the 10 ms the join allows */
 static int fm1_core1_alive(void)
@@ -117,6 +121,22 @@ static int fm1_core1_submit(fm1_core1_fn fn, void *context)
  * rerun (it partly advanced its state). */
 static void fm1_core1_retire(void)
 {
+#ifdef EN_SATIE1
+    satie_core1_last[0] = 0;
+    satie_core1_last[1] = fm1_ticks();
+    satie_core1_last[2] = aw.timeouts;
+    satie_core1_last[3] = aw.rejected;
+    satie_core1_last[4] = aw.request;
+    satie_core1_last[5] = aw.complete;
+    satie_core1_last[6] = fm1_core1_fault.count;
+    satie_core1_last[7] = fm1_core1_fault.pc;
+    satie_core1_last[8] = fm1_core1_fault.dbg;
+    satie_core1_last[9] = fm1_core1_fault.emu;
+    satie_core1_last[10] = (uint32_t)(uintptr_t)aw.fn;
+    satie_core1_last[11] = (uint32_t)(uintptr_t)aw.context;
+    __asm__ volatile("csync" ::: "memory");
+    satie_core1_last[0] = 0x53434431u;
+#endif
     fm1_core1_stop();
     fm1_core1_bar_set();
     aw_online = 0;

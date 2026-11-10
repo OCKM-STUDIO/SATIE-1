@@ -716,8 +716,13 @@ static void sysex_byte(uint8_t b)
         else if (usb.sx_len == 6u && usb.sysex[1] == 0x22 && usb.sysex[2] == 0x24 && usb.sysex[3] == 0x35 &&
                  usb.sysex[4] == 0x7F)
             usb.ota_req = 1;
-        else if (usb.sx_len == 6u && usb.sysex[1] == 0x7D && usb.sysex[2] == 0x50 && usb.sysex[3] == 0x46)
-            usb.tel_req = usb.sysex[4] == 2u ? 3u : (uint8_t)(1u + (usb.sysex[4] & 1u));   /* the telemetry (main_fm1.c): 1 off, 2 on / keep alive, 3 the bench */
+        else if (usb.sx_len == 6u && usb.sysex[1] == 0x7D && usb.sysex[2] == 0x50 && usb.sysex[3] == 0x46) {
+            usb.tel_req = usb.sysex[4] == 2u ? 3u : (uint8_t)(1u + (usb.sysex[4] & 1u));
+#if defined(EN_SATIE1) && !defined(FELUCCA_LOADER)
+            if (usb.sysex[4] == 3u) usb.tel_req = 4u; /* read-only boot diagnostics */
+            if (usb.sysex[4] == 4u) usb.tel_req = 5u; /* read-only retained exception */
+#endif
+        }
         else if (sx_collect && sx_pos) {
             sx_frame_len = sx_pos;
             RING_PUBLISH();

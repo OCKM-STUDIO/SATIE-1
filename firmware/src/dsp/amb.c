@@ -3,6 +3,12 @@
 #include "amb.h"
 #include "fastmath.h"
 #ifdef EN_SATIE1
+volatile uint32_t *en_satie_trace;
+#define SATIE_TRACE(v) do { if (en_satie_trace) *en_satie_trace = (v); } while (0)
+#else
+#define SATIE_TRACE(v) do {} while (0)
+#endif
+#ifdef EN_SATIE1
 #include "satie_data.h"
 #include "satie_data.inc"
 static void satie_step(void);
@@ -6209,6 +6215,7 @@ static void drain(void)
         int a = (int)(c >> 16 & 0xFFu), b = (int)(int16_t)(c & 0xFFFFu);
         BARRIER();
         q_r++;
+        SATIE_TRACE(0x10000000u | ((c >> 24) << 16) | (uint32_t)a);
         switch (c >> 24) {
 #ifdef EN_SATIE1
         case C_SATIE_EDIT:
@@ -7537,6 +7544,7 @@ static void render_drums(uint32_t n)
     uint32_t j;
     const float g = pulse_vol * 1.1f;
     drum_t *v;
+    SATIE_TRACE(0x41000000u | L_KICK);
     v = &drum[L_KICK];                           /* kick: a sine falling fast to its note, a click, driven */
     if (v->on) {
         float ph = v->ph, inc = v->inc, amp = v->amp, att = v->att, ck = v->idx, gk = g * lane_g[L_KICK] * 1.15f, fo = v->fo, x = 0.0f;
@@ -7586,25 +7594,35 @@ static void render_drums(uint32_t n)
     }
 #ifdef EN_SATIE1
     if (par[P_KIT_SNARE] == EN_KIT_BRUSH) {
+        SATIE_TRACE(0x41000000u | L_SNARE);
         render_brush(&drum[L_SNARE], n, g * 0.38f * lane_g[L_SNARE], 0);
+        SATIE_TRACE(0x41000000u | L_CLAP);
         render_brush(&drum[L_CLAP], n, g * 0.30f * lane_g[L_CLAP], 0);
     } else
 #endif
     {
+        SATIE_TRACE(0x41000000u | L_SNARE);
         render_snare(&drum[L_SNARE], n, g * 0.38f * lane_g[L_SNARE]);
+        SATIE_TRACE(0x41000000u | L_CLAP);
         render_clap(&drum[L_CLAP], n, g * 0.42f * lane_g[L_CLAP]);
     }
 #ifdef EN_SATIE1
     if (par[P_KIT_HAT] == EN_KIT_BRUSH) {
+        SATIE_TRACE(0x41000000u | L_HAT);
         render_brush(&drum[L_HAT], n, g * 0.22f * lane_g[L_HAT], 1);
+        SATIE_TRACE(0x41000000u | L_OHAT);
         render_brush(&drum[L_OHAT], n, g * 0.18f * lane_g[L_OHAT], 1);
     } else
 #endif
     {
+        SATIE_TRACE(0x41000000u | L_HAT);
         render_hat(&drum[L_HAT], n, g * 0.22f * lane_g[L_HAT], 0.75f, 1.0f);
+        SATIE_TRACE(0x41000000u | L_OHAT);
         render_hat(&drum[L_OHAT], n, g * 0.18f * lane_g[L_OHAT], 1.0f, 0.75f);
     }
+    SATIE_TRACE(0x41000000u | L_PERC);
     render_perc(&drum[L_PERC], n, g * 0.3f * lane_g[L_PERC]);
+    SATIE_TRACE(0x42000004u); /* drum bus processing after the individual voices */
 }
 
 _Static_assert(BLK == BLK_FM, "the DX voices' buffers are a chunk long");
@@ -7681,7 +7699,7 @@ volatile uint32_t en_diag[36];
 #define DIAG_LOCALS
 #endif
 volatile uint32_t en_peak_stage[9], en_peak_total, en_peak_info;   /* the longest chunk since last read: its stages (ticks), its total, and when it was */
-#define PT(i) do { if (en_prof_clock) { const uint32_t t1_ = en_prof_clock(); en_prof[i] += t1_ - pt0_; cs_[i] = t1_ - pt0_; pt0_ = t1_; } } while (0)
+#define PT(i) do { SATIE_TRACE(0x40000000u + (i)); if (en_prof_clock) { const uint32_t t1_ = en_prof_clock(); en_prof[i] += t1_ - pt0_; cs_[i] = t1_ - pt0_; pt0_ = t1_; } } while (0)
 static void render_chunk(int32_t *out, uint32_t n, float gain)
 {
     uint32_t j, pt0_ = en_prof_clock ? en_prof_clock() : 0u, bal_t0 = pt0_, bal_a = 0u, bal_w = 0u, cs_[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -7843,8 +7861,9 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     if (rv_c2 && rv_job.bass) {                 /* the drone and the acid are the other core's: wait for them (the reverb goes on behind) */
         while (!stage2_done)
             if (c2_alive && !c2_alive()) {
-                if (c2_join())                  /* it finished just as the time ran out: not lost */
-                    continue;
+                if (c2_join())                  /* whole job complete: all stage outputs are ready,
+                                                * even if the separate stage marker was not observed */
+                    break;
                 rv_c2 = 0;                      /* (the join retired it: before the drone and the acid it was writing are read) */
                 en_c2_lost++;
                 pad_ring_clear(rv_job.pad_w, n);   /* (the pad it was writing for the next chunk) */
@@ -7930,8 +7949,9 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     if (rv_c2) {                                /* the tank's output is the other core's: wait for that only (its DX voices go on behind, joined after the master) */
         while (!stage3_done)
             if (c2_alive && !c2_alive()) {
-                if (c2_join())                  /* it finished just as the time ran out: not lost */
-                    continue;
+                if (c2_join())                  /* completion is authoritative; re-waiting for a
+                                                * missing stage marker would hang until watchdog reset */
+                    break;
                 rv_c2 = 0;                      /* (the join retired it: this chunk has no reverb, and the tank starts over) */
                 en_c2_lost++;
                 pad_ring_clear(rv_job.pad_w, n);
@@ -8176,6 +8196,7 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
     float gain;
     int32_t *const out0 = out;
     const uint32_t n0 = n;
+    SATIE_TRACE(0x10000000u);
     RT(32, drain());
     gain = muted ? 0.0f : (float)gain_q12 * (1.0f / 4096.0f) * 2.0f;
     usb_gain = muted ? 0.0f : 1.0f;             /* the USB audio at a fixed level (en_usb_out): unity, the knob at about three quarters */
@@ -8189,6 +8210,7 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         int timed = en_playing && !en_ext;
         if (timed) {
             if (pulse_left <= 0.0f) {
+                SATIE_TRACE(0x30000000u);
                 RT(34, clock_pulse());
                 pulse_left += step_len * (1.0f / 6.0f);
             }
@@ -8214,6 +8236,7 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         if (ctl_acc >= 128u) {                  /* the slow things once per 128 frames at most (0.14.4): a short chunk, cut for a swung hit, skips them. On the
                                                  * device control() cost 210-260 us a call whatever the chunk's length (a dozen functions fetched cold); the
                                                  * things it steps take the frames since it last ran, so nothing drifts */
+            SATIE_TRACE(0x20000000u);
             RT(33, control(ctl_acc));
             ctl_acc = 0;
         } else {
@@ -8223,7 +8246,9 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
                 trk_g[t] = trk_g1[t];
         }
         usb_cur = en_usb_out ? en_usb_out + (out - out0) : 0;
+        SATIE_TRACE(0x40000000u);
         render_chunk(out, k, gain);
+        SATIE_TRACE(0x50000000u);
         RT(35, drums_wait_step((int32_t)k));
         out += 2 * k;
         n -= k;
@@ -8254,4 +8279,5 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         }
     }
     en_hushed = (uint8_t)(hush && hush_g <= 0.0f);
+    SATIE_TRACE(0x60000000u);
 }

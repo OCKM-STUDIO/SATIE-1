@@ -25,7 +25,7 @@ with zipfile.ZipFile(source,'w',zipfile.ZIP_DEFLATED) as z:
  for p in sorted(files):z.write(p,Path('SATIE-1-source')/p.relative_to(root))
  assert z.testzip() is None
 copies={firmware:firmware.name,root/'build/satie/SATIE-1.html':'SATIE-1.html',root/'satie/QUICK-START.txt':'QUICK-START.txt',
- root/'satie/SHARING.txt':'SHARING.txt',root/'satie/SOURCES.txt':'SOURCES.txt',root/'LICENSE':'LICENSE',root/'LICENSING.md':'LICENSING.md',
+ root/'satie/SHARING.txt':'SHARING.txt',root/'satie/FINAL-CHECKS.txt':'FINAL-CHECKS.txt',root/'satie/SOURCES.txt':'SOURCES.txt',root/'LICENSE':'LICENSE',root/'LICENSING.md':'LICENSING.md',
  art:'SATIE-1-card.jpg',root/'satie/art/SATIE-1-Erik-Evolved.png':'SATIE-1-cover.png',root/'satie/art/CREDITS.txt':'ART-CREDITS.txt',
  root/'satie/art/PROMPTS.txt':'ART-PROMPTS.txt',root/'fmhub.json':'fmhub.json',root/'build/satie/guide/startup.png':'startup-screen.png'}
 for src,target in copies.items():shutil.copyfile(src,dest/target)
@@ -41,10 +41,11 @@ GLO opens the guide. Read QUICK-START.txt for the controls and saved-track recal
 The pad-clicking fix preserves tone and envelope values across audio blocks.
 The maker confirmed the Ibiza Chill clicking is fixed on a real FM-1.
 
-The 0.1.2-dev candidate passed the mood-label check and PERF-1 round-trip.
-Earlier 0.1.1-beta tests covered stock V15, audio and saved-favourite recall.
-This exact beta still needs final hardware routes and interrupted-update recovery.
-See SHARING.txt for the remaining hardware checks before a Hub submission.
+This candidate retains the diagnostics from 0.1.3-trace2, which completed about
+4h32 of clean monitored playback on 9 November. Earlier builds had intermittent
+clicking/reboots; their underlying cause has not been confirmed. The exact
+{version} package still needs final hardware validation before publication.
+See SHARING.txt and the source's satie/FINAL-CHECKS.txt for the test record.
 Source and beta releases: https://github.com/OCKM-STUDIO/SATIE-1
 
 The source ZIP contains all project sources, build scripts, score editions,
