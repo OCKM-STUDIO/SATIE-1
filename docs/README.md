@@ -2,6 +2,14 @@
 
 Published with GitHub Pages from main:/docs at https://ockm-studio.github.io/SATIE-1/.
 
-The self-contained index.html is the tested v0.1.3-beta release preview, with source/download links and a browser-save note added to its footer. Its embedded WASM and audio worklet are unchanged.
+The self-contained index.html uses the tested v0.1.3-beta audio engine and worklet.
+Its dedicated SATIE interface includes Erik’s portrait, rotary controls, ten
+repertoire keys and responsive desktop/mobile layouts.
 
-For a future release, build with `sh satie/build_preview.sh`, validate the preview, then copy build/satie/SATIE-1.html here as index.html and retain the source/download links with the matching release tag. The firmware release process does not automatically replace the live player.
+Edit satie/preview.html, satie/player.css and satie/player.js. For interface-only
+updates, run `python3 satie/package_preview.py` with the existing build/satie/satie.wasm.
+For an audio-engine release, first run `sh satie/build_preview.sh`.
+Validate with `node satie/check_web.mjs` and browser checks, then copy
+build/satie/SATIE-1.html here as index.html. Keep the source/download links on
+the matching firmware release. The firmware release process does not automatically
+replace the live player.

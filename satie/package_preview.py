@@ -23,6 +23,10 @@ rows=re.findall(r'\{"([^"]+)", \{([^}]+)\}\}',guide)
 help_pages=[dict(title=title,lines=re.findall(r'"([^"]*)"',body)) for title,body in rows]
 assert len(help_pages)==8 and all(len(p['lines'])==6 for p in help_pages)
 html=html.replace('__SATIE_GUIDE__',json.dumps(help_pages))
+html=html.replace('__SATIE_STYLE__',(root/'satie/player.css').read_text())
+html=html.replace('__SATIE_PLAYER__',(root/'satie/player.js').read_text())
+html=html.replace('__SATIE_ART__','data:image/png;base64,'+base64.b64encode((root/'satie/art/startup.png').read_bytes()).decode())
+assert not re.search(r'__SATIE_[A-Z_]+__',html), 'Unresolved preview placeholder'
 path = root / 'build/satie/SATIE-1.html'
 path.write_text(html)
 print(f'Playable preview: {path} ({path.stat().st_size:,} bytes)')

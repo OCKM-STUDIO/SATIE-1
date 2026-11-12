@@ -2,130 +2,47 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Erik. Evolved. Play SATIE-1: ten Satie pieces, five electronic moods, an evolving soundtrack of your own.">
 <title>SATIE-1 · Erik. Evolved.</title>
-<style>
-:root{color-scheme:dark;--bg:#101719;--panel:#192326;--line:#344348;--ink:#edf2e9;--dim:#b0bdb9;--mint:#b8e8cd;--amber:#edbd6e}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:42px 28px}header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:20px}.brand{font-size:22px;letter-spacing:.12em;font-weight:650}.eyebrow{font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--mint)}.intro{padding:38px 0 26px}h1{font:400 clamp(38px,6vw,64px)/1.08 Georgia,serif;margin:10px 0 18px;letter-spacing:-.035em}.intro p{color:var(--dim);max-width:620px;margin:0}button,select,input{font:inherit}button,select{border:1px solid var(--line);border-radius:10px;padding:12px 17px;color:var(--ink);background:#233034}button{cursor:pointer;transition:background .15s}button:hover:enabled{background:#34474b}button:disabled,select:disabled{opacity:.45;cursor:default}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--amber);outline-offset:4px}.primary{background:var(--mint);border-color:var(--mint);color:#10251c;font-weight:650}.primary:hover:enabled{background:#d4f6e2}button[aria-pressed="true"]{background:#354b41;border-color:var(--mint);color:var(--mint)}.instrument{border:1px solid var(--line);border-radius:20px;background:var(--panel);padding:28px;display:grid;grid-template-columns:1fr 240px;gap:30px}.control label{display:block;font-size:13px;color:var(--dim);margin-bottom:8px}.tune{grid-column:1/-1}.selectors{display:grid;grid-template-columns:1fr;gap:16px}select{width:100%;padding:12px 10px}.now{margin:24px 0 18px;font:28px/1.2 Georgia,serif}.status{color:var(--dim);font-size:13px;min-height:40px}.actions{display:flex;flex-wrap:wrap;gap:9px;margin:20px 0}.actions button{padding:10px 14px}.screen{align-self:center;text-align:center}canvas{display:block;width:240px;height:240px;background:#0c1117;border-radius:8px;image-rendering:pixelated;box-shadow:0 0 0 8px #101719}.screen p{margin:18px 0 0;color:var(--dim);font-size:11px;letter-spacing:.13em;text-transform:uppercase}.macros{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:25px;border-top:1px solid var(--line);padding-top:24px}.macro label{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px}.macro output{font-variant-numeric:tabular-nums;color:var(--mint)}input[type=range]{width:100%;accent-color:var(--mint);cursor:pointer}.hint{display:block;font-size:12px;line-height:1.4;color:var(--dim);margin-top:9px}.start{display:flex;gap:16px;align-items:center;margin-bottom:20px}.start span{font-size:13px;color:var(--dim)}.notes{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:26px;font-size:14px;color:var(--dim)}.notes strong{display:block;color:var(--ink);font-size:15px;font-weight:550;margin-bottom:6px}footer{margin-top:30px;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:var(--dim)}a{color:var(--mint)}.volume{display:flex;gap:10px;align-items:center;font-size:12px;color:var(--dim)}.volume input{max-width:95px}#notice{color:var(--amber);font-size:13px;min-height:22px} [hidden]{display:none!important}@media(max-width:720px){main{padding:24px 18px}.instrument{grid-template-columns:1fr;padding:22px}.screen{justify-self:center}.macros{grid-template-columns:1fr 1fr}.notes{grid-template-columns:1fr;gap:18px}.selectors{grid-template-columns:1fr}.intro{padding-top:28px}.start{align-items:flex-start;flex-direction:column}.volume{max-width:140px}}
-</style>
+<style>__SATIE_STYLE__</style>
 </head>
 <body><main>
-<header><div class="brand">SATIE-1 · OCKM Studio</div><label class="volume">Volume <input id="volume" type="range" min="0" max="100" value="55" aria-label="Volume"></label></header>
-<section class="intro"><div class="eyebrow">Your working soundtrack</div><h1>Erik. Evolved.</h1><p>Satie’s melodies, quietly reimagined. Choose a piece and a mood, then let an electronic soundtrack unfold while you work.</p></section>
-<div class="start" id="startRow"><button id="start" class="primary">Start listening</button><span>Starts in Orbit · Gymnopédie No. 1</span></div>
-<div id="notice" role="status" aria-live="polite"></div>
-<section class="instrument" aria-label="SATIE-1 instrument">
-<div><div class="selectors">
-<div class="control"><label for="mood">Mood · Select</label><select id="mood" disabled><option value="0">After Hours</option><option value="1">Ibiza Chill</option><option value="2" selected>Orbit</option><option value="3">Blue Note</option><option value="4">Ghost</option></select></div>
-<div class="control tune"><label for="source">Tune · Preset</label><select id="source" disabled>__SATIE_OPTIONS__</select></div>
-<div class="control"><label for="page">Page · Algorithm</label><select id="page" disabled><option>Home</option><option>Lead</option><option>Bass</option><option>Drums</option><option>Layers</option><option>Colour</option><option>Delay</option><option>Space</option></select></div></div><div class="now" id="now">Gymnopédie No. 1</div><div class="status" id="status">Warm, floating tones and spacious echoes. Ready when you are.</div>
-<div class="actions"><button id="browse" disabled>Browse tunes · SEL</button><button id="play" class="primary" disabled>Pause</button><button id="home" disabled>Home</button><button id="new" disabled>New track</button><button id="hold" aria-pressed="false" disabled>Hold</button><button id="save" disabled>Keep</button><button id="guide" disabled>Guide · GLO</button></div>
-<section id="guidePanel" hidden aria-label="Quick guide"><h2 id="guideTitle"></h2><div id="guideCopy"></div><div class="actions"><button id="guidePrevious">Previous</button><button id="guideNext">Next · SEL</button><button id="guideClose">Close · HOME</button></div></section>
-<section id="tuneBrowser" hidden aria-label="Tune browser"><p id="browserPath"></p><div id="browserChoices" class="actions"></div><div class="actions"><button id="browserBack">Back · HOME</button><button id="browserClose">Close browser</button></div></section>
-<span class="hint">Algorithm selects a page for the four controls below. Home returns to the arrangement. Keep remembers every page; Reset page restores just that page. GLO opens the guide and saved-track recall.</span>
+<header class="site-header"><a class="wordmark" href="https://github.com/OCKM-STUDIO" aria-label="OCKM Studio"><b>OCKM</b><span>STUDIO</span></a><nav aria-label="Project links"><a href="https://github.com/OCKM-STUDIO/SATIE-1/releases/tag/v0.1.3-beta" target="_blank" rel="noreferrer">Get the firmware ↗</a><a class="source-link" href="https://github.com/OCKM-STUDIO/SATIE-1" target="_blank" rel="noreferrer">Source ↗</a></nav></header>
+<section class="intro"><div><div class="eyebrow">SATIE-1 / a generative instrument</div><h1>Erik. <em>Evolved.</em></h1></div><p class="intro-copy"><span>Ten pieces. Five moods. Yours to unfold.</span>Choose a melody and let Satie become the soundtrack to whatever comes next.</p></section>
+<section class="instrument chassis" aria-label="SATIE-1 instrument">
+<i class="screw" aria-hidden="true"></i><i class="screw" aria-hidden="true"></i><i class="screw" aria-hidden="true"></i><i class="screw" aria-hidden="true"></i>
+<div class="panel-brand"><strong>SATIE–1</strong><span>ERIK SATIE · REIMAGINED</span></div>
+<div class="hardware">
+<div class="selectors">
+<div class="control master"><label for="volume">Volume <small>Master</small></label><div class="dial-shell"><div class="dial-face" aria-hidden="true"></div><input id="volume" class="rotary" type="range" min="0" max="100" value="55" aria-label="Volume"></div><output id="volumeValue" for="volume">55</output></div>
+<div class="control"><label for="mood">Mood <small>Atmosphere</small></label><div class="dial-shell"><div class="dial-face" aria-hidden="true"></div><input id="moodDial" class="rotary" type="range" min="0" max="4" value="2" disabled aria-label="Mood dial"></div><select id="mood" disabled><option value="0">After Hours</option><option value="1">Ibiza Chill</option><option value="2" selected>Orbit</option><option value="3">Blue Note</option><option value="4">Ghost</option></select></div>
+<div class="control"><label for="source">Piece <small>Repertoire</small></label><div class="dial-shell"><div class="dial-face" aria-hidden="true"></div><input id="sourceDial" class="rotary" type="range" min="0" max="9" value="0" disabled aria-label="Piece dial"></div><select id="source" disabled>__SATIE_OPTIONS__</select></div>
+<div class="control"><label for="page">Shape <small>Instrument / FX</small></label><div class="dial-shell"><div class="dial-face" aria-hidden="true"></div><input id="pageDial" class="rotary" type="range" min="0" max="7" value="0" disabled aria-label="Sound page dial"></div><select id="page" disabled><option>Home</option><option>Lead</option><option>Bass</option><option>Drums</option><option>Layers</option><option>Colour</option><option>Delay</option><option>Space</option></select></div>
 </div>
-<div class="screen"><canvas id="screen" width="240" height="240" aria-label="Live instrument display"></canvas><p>The FM-1 screen</p></div>
-<div class="macros">
-<div class="macro"><label for="tempo"><span id="tempoLabel">Tempo</span> <output id="tempoValue">60</output></label><input id="tempo" type="range" min="50" max="150" value="60" disabled><span class="hint">Beats per minute</span></div>
-<div class="macro"><label for="energy"><span id="energyLabel">Energy</span> <output id="energyValue">50</output></label><input id="energy" type="range" min="0" max="100" value="50" disabled><span class="hint">Pulse, drive and intensity</span></div>
-<div class="macro"><label for="evolve"><span id="evolveLabel">Evolve</span> <output id="evolveValue">35</output></label><input id="evolve" type="range" min="0" max="100" value="35" disabled><span class="hint">From source notes to transformed phrases</span></div>
-<div class="macro"><label for="mix"><span id="mixLabel">Mix</span> <output id="mixValue">42</output></label><input id="mix" type="range" min="0" max="100" value="42" disabled><span class="hint">Solo → Duet → Trio → Float</span></div>
-</div></section>
-<div class="notes"><div><strong>Satie, with room to breathe</strong>Three Gymnopédies, three Gnossiennes and four Ogives. Each piece follows a complete score reduction while its electronic arrangement gently evolves. At zero Evolve, the lead follows the reduced source pitches. Hold repeats the current eight-bar passage. Browse by collection with SEL, or turn PRESET to choose a tune.</div><div><strong>One dial, an evolving arrangement</strong>Mix starts with lead and drums, gradually adds bass and atmosphere, then brings in an inner score voice or a quiet melodic answer. Turn further for a fuller, more spacious blend. Orbit floats; Blue Note pairs piano and upright bass with soft brushes; Ghost adds dark texture and a broken beat. After Hours and Ibiza Chill offer more rhythmic alternatives.</div><div><strong>Shape each instrument</strong>Use Algorithm to reach Lead, Bass, Drums and Layers. Adjust the sound while the score keeps moving, or reset any page with EDIT.</div><div><strong>Colour and echoes</strong>Vinyl adds sampler-inspired compression and warmth, with independent wobble and dust. Tape and Grit offer other textures. Delay follows the tempo; Space shapes the room and stereo width.</div></div>
-<footer>Electronic arrangements with simplified voices and sixteenth-note timing over a 4/4 beat. This is a playable preview of the FM-1 firmware.<br>Erik Satie · Score editions by Evin Robertson, Knute Snortum and Frédéric Duperray via <a href="https://www.mutopiaproject.org/ftp/SatieE/" target="_blank" rel="noreferrer">Mutopia</a>; Ogive MIDI editions by <a href="https://commons.wikimedia.org/wiki/File:Erik_Satie_-_Ogive_No.1.mid" target="_blank" rel="noreferrer">David Cooke</a>. Public domain / <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer">CC BY-SA 4.0</a>. Firmware based on PERF-1 / HYP-1 / AMB-1, GPL-3.0.</footer>
+<div class="screen-column"><div class="screen-bezel"><canvas id="screen" width="240" height="240" aria-label="SATIE-1 live instrument display"></canvas><div class="start" id="startRow"><button id="start">Start listening</button><span>A little Satie. A little possibility.</span></div></div><div class="screen-caption"><span>SCORE → VARIATION</span><span>ERIK. EVOLVED.</span></div></div>
+<div class="right-bank"><div class="macros">
+<div class="macro"><label for="tempo"><span id="tempoLabel">Tempo</span></label><div class="dial-shell"><div class="dial-face" aria-hidden="true"></div><input id="tempo" class="rotary" type="range" min="50" max="150" value="60" disabled aria-describedby="tempoHint"></div><output id="tempoValue" for="tempo">60</output><span class="hint" id="tempoHint">Beats per minute</span></div>
+<div class="macro"><label for="energy"><span id="energyLabel">Energy</span></label><div class="dial-shell"><div class="dial-face" aria-hidden="true"></div><input id="energy" class="rotary" type="range" min="0" max="100" value="50" disabled aria-describedby="energyHint"></div><output id="energyValue" for="energy">50</output><span class="hint" id="energyHint">Pulse, drive and intensity</span></div>
+<div class="macro"><label for="evolve"><span id="evolveLabel">Evolve</span></label><div class="dial-shell"><div class="dial-face" aria-hidden="true"></div><input id="evolve" class="rotary" type="range" min="0" max="100" value="35" disabled aria-describedby="evolveHint"></div><output id="evolveValue" for="evolve">35</output><span class="hint" id="evolveHint">Source notes → transformed phrases</span></div>
+<div class="macro"><label for="mix"><span id="mixLabel">Mix</span></label><div class="dial-shell"><div class="dial-face" aria-hidden="true"></div><input id="mix" class="rotary" type="range" min="0" max="100" value="42" disabled aria-describedby="mixHint"></div><output id="mixValue" for="mix">42</output><span class="hint" id="mixHint">Solo → Duet → Trio → Float</span></div>
+</div><p class="control-tip" id="controlTip">Drag a dial up or down · use arrow keys to fine-tune</p>
+<div class="actions"><button id="browse" data-code="PIECES" disabled>Browse</button><button id="home" data-code="HOME" disabled>Arrangement</button><button id="new" data-code="CREATE" disabled>New track</button><button id="save" data-code="KEEP" disabled>Favourite</button><button id="fx" data-code="FX" disabled>Colour / space</button><button id="guide" data-code="GUIDE" disabled>How to play</button><button id="hold" data-code="HOLD" aria-pressed="false" disabled>Repeat passage</button><button id="play" data-code="PLAY" disabled>Pause</button></div></div>
+</div>
+<section id="guidePanel" class="help-panel" hidden aria-label="Quick guide"><h2 id="guideTitle"></h2><div id="guideCopy"></div><div class="actions"><button id="guidePrevious">Previous</button><button id="guideNext">Next</button><button id="guideClose">Close guide</button></div></section>
+<section id="tuneBrowser" class="help-panel" hidden aria-label="Piece browser"><h2 id="browserPath"></h2><div id="browserChoices" class="browser-choices"></div><div class="actions"><button id="browserBack">Back</button><button id="browserClose">Close browser</button></div></section>
+<div class="repertoire" id="repertoire" aria-label="Choose a Satie piece"></div>
+<div class="device-meta"><span>COMPOSED BY ERIK · EVOLVED BY YOU</span><span>OCKM STUDIO</span></div>
+</section>
+<div class="readout"><div class="now" id="now">Gymnopédie No. 1</div><div class="status" id="status">Orbit · Ready when you are</div></div>
+<div class="notice" id="notice" role="status" aria-live="polite"></div>
+<details class="guidance"><summary>A little guidance</summary><div class="notes"><div><strong>Satie, with room to breathe</strong>Three Gymnopédies, three Gnossiennes and four Ogives. Each piece follows a complete score reduction while its electronic arrangement gently evolves. At zero Evolve, the lead follows the reduced source pitches. Hold repeats the current eight-bar passage. Browse by collection with Browse, turn Piece, or use the repertoire keys.</div><div><strong>One dial, an evolving arrangement</strong>Mix starts with lead and drums, gradually adds bass and atmosphere, then brings in an inner score voice or a quiet melodic answer. Turn further for a fuller, more spacious blend. Orbit floats; Blue Note pairs piano and upright bass with soft brushes; Ghost adds dark texture and a broken beat. After Hours and Ibiza Chill offer more rhythmic alternatives.</div><div><strong>Shape each instrument</strong>Turn Shape to reach Lead, Bass, Drums and Layers. Adjust the sound while the score keeps moving, or reset any page with Reset page.</div><div><strong>Colour and echoes</strong>Vinyl adds sampler-inspired compression and warmth, with independent wobble and dust. Tape and Grit offer other textures. Delay follows the tempo; Space shapes the room and stereo width.</div></div></details>
+<footer><span class="footer-links"><a href="https://github.com/OCKM-STUDIO/SATIE-1/releases/tag/v0.1.3-beta" target="_blank" rel="noreferrer">Download for FM-1</a> · <a href="https://github.com/OCKM-STUDIO/SATIE-1" target="_blank" rel="noreferrer">Source & credits</a> · Your kept favourite stays in this browser.</span>Electronic arrangements with simplified voices and sixteenth-note timing over a 4/4 beat. This is a playable preview of the FM-1 firmware.<br>Erik Satie · Score editions by Evin Robertson, Knute Snortum and Frédéric Duperray via <a href="https://www.mutopiaproject.org/ftp/SatieE/" target="_blank" rel="noreferrer">Mutopia</a>; Ogive MIDI editions by <a href="https://commons.wikimedia.org/wiki/File:Erik_Satie_-_Ogive_No.1.mid" target="_blank" rel="noreferrer">David Cooke</a>. Public domain / <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer">CC BY-SA 4.0</a>. Firmware based on PERF-1 / HYP-1 / AMB-1, GPL-3.0.</footer>
 </main>
 <script>
-'use strict';
 const wasm64 = '__SATIE_WASM__';
 const workletCode = __SATIE_WORKLET__;
-const $ = id => document.getElementById(id);
-let context, node, state, ready=false, pressing=Promise.resolve();
-let pending=[null,null,null,null], shownPage=-1, browserKey='', startupTimer;
-const macros=['tempo','energy','evolve','mix'], dragging=new Set();
-const pages=[
- [['Tempo','Energy','Evolve','Mix'],['Beats per minute','Pulse, drive and intensity','Source notes → transformed phrases','Solo → Duet → Trio → Float']],
- [['Tone','Character','Space','Level'],['Dark → bright','Soft → distinctive mood texture','Lead send to delay and reverb','Mute → original at 50 → louder']],
- [['Tone','Attack','Length','Level'],['Dark → bright','Plucked → softer onset','Short → sustained','Mute → original at 50 → louder']],
- [['Tone','Swing','Pattern','Level'],['Soft → crisp','Straight → lazy','Choose a rhythmic shape','Mute → original at 50 → louder']],
- [['Third voice','Atmosphere','Space','Level'],['Inner melody balance','Background texture balance','Layer send to delay and reverb','Overall layer level']],
- [['Style','Amount','Wobble','Dust'],['Clean, Vinyl, Tape or Grit','Compression and colour','Pitch movement','Crackle and hiss; zero is quiet']],
- [['Time','Repeats','Tone','Wet'],['Tempo-synced note length','Short echoes → longer trails','Dark → clear repeats','Dry → mood balance at 50 → wet']],
- [['Reverb','Size','Tone','Width'],['Dry → mood balance at 50 → wet','Intimate → spacious','Dark → bright room','Mono → normal at 50 → wide']]
-];
-function knobText(page,i,v){return page===3&&i===2?['Sparse','Steady','Mood','Broken','Busy'][v]:page===5&&i===0?['Clean','Vinyl','Tape','Grit'][v]:page===6&&i===0?['1/8','Dotted 1/8','1/4'][v]:v;}
-const storeKey='satie1-favourite-v1';
 const tunes = __SATIE_CATALOG__;
 const guidePages = __SATIE_GUIDE__;
-const moodNames = ['After Hours','Ibiza Chill','Orbit','Blue Note','Ghost'];
-let stored={};
-try { stored=JSON.parse(localStorage.getItem(storeKey)||localStorage.getItem('bach1-favourite-v1')||'{}'); } catch { $('notice').textContent='Browser storage is unavailable. Keep will last for this session only.'; }
-const canvas=$('screen').getContext('2d'), pixels=canvas.createImageData(240,240);
-canvas.fillStyle='#0c1117';canvas.fillRect(0,0,240,240);canvas.fillStyle='#b8e8cd';canvas.font='24px Georgia';canvas.fillText('SATIE-1',68,115);canvas.font='12px system-ui';canvas.fillText('Ready when you are',61,142);
-function send(message){if(node)node.port.postMessage(message)}
-function tap(button){pressing=pressing.then(async()=>{send({type:'buttons',mask:1<<button});await new Promise(r=>setTimeout(r,65));send({type:'buttons',mask:0});await new Promise(r=>setTimeout(r,65));});}
-function encoder(role,n){send({type:'enc',role,n})}
-function tuneBrowser(){
- const level=state[14];
- const groups=[...new Set(tunes.map(t=>t.group))];
- $('tuneBrowser').hidden=!level;$('browse').disabled=!!level;
- ['new','home','page','save',...macros].forEach(id=>$(id).disabled=!!level||!!state[27]);
- $('browse').disabled=!!level||!!state[27];
- const key=state.slice(14,18).join(':');if(key===browserKey)return;browserKey=key;
- if(!level)return;
- let choices;
- if(level===1){$('browserPath').textContent='Erik Satie · Choose collection';choices=groups;}
- else{$('browserPath').textContent=groups[state[16]]+' · Choose tune';choices=tunes.filter(t=>t.group===groups[state[16]]).map(t=>t.title);}
- $('browserChoices').replaceChildren(...choices.map((name,i)=>{const b=document.createElement('button');b.textContent=name;b.setAttribute('aria-pressed',String(i===state[17]));b.onclick=()=>{encoder(0,i-state[17]);tap(1);};return b;}));
-}
-function frame(m){
- if(!ready&&m.satie){ready=true;clearTimeout(startupTimer);$('notice').textContent='';$('startRow').hidden=true;document.querySelectorAll('.instrument button,.instrument select,.instrument input').forEach(el=>el.disabled=false);}
- if(m.fb){for(let i=0;i<m.fb.length;i++){const c=((m.fb[i]&255)<<8)|(m.fb[i]>>>8), p=i*4;pixels.data[p]=(c>>>11)*255/31;pixels.data[p+1]=((c>>>5)&63)*255/63;pixels.data[p+2]=(c&31)*255/31;pixels.data[p+3]=255;}canvas.putImageData(pixels,0,0);}
- if(m.store){stored=Object.fromEntries(Object.entries(m.store).map(([k,v])=>[k,Array.from(v)]));try{localStorage.setItem(storeKey,JSON.stringify(stored));$('notice').textContent='Favourite kept. Recall it from the last page of the GLO guide, or return here later.';}catch{$('notice').textContent='Favourite kept for this session. Browser storage is unavailable.';}}
- if(!m.satie)return;
- state=m.satie;
- if(!state[10]){$('mood').value=state[0];$('source').value=state[1];}
- $('mood').disabled=$('source').disabled=!!state[10]||!!state[14]||!!state[27];tuneBrowser();
- const help=state[27];$('guidePanel').hidden=!help;
- if(help){$('guideTitle').textContent=help+' / '+guidePages.length+' · '+guidePages[help-1].title;
- $('guideCopy').textContent=guidePages[help-1].lines.join(' ');
- $('guidePrevious').disabled=help===1;$('guideNext').textContent=help===guidePages.length?'Recall saved track · SEL':'Next · SEL';}
- document.documentElement.style.setProperty('--mint',state[0]===2?'#c9c8ff':state[0]===1?'#edbd6e':'#b8e8cd');
- const page=state[18];
- if(page!==shownPage){shownPage=page;pending.fill(null);dragging.clear();}
- $('page').selectedIndex=page;$('new').textContent=page?'Reset page':'New track';
- macros.forEach((name,i)=>{
-  const el=$(name);el.min=page===0&&i===0?50:0;el.max=state[23+i];
-  $(name+'Label').textContent=pages[page][0][i];el.parentElement.querySelector('.hint').textContent=pages[page][1][i];
-  if(pending[i]!==null){if(state[19+i]===pending[i])pending[i]=null;else return;}
-  if(!dragging.has(name)){el.value=state[19+i];$(name+'Value').value=knobText(page,i,state[19+i]);}
- });
- $('play').textContent=state[8]?'Pause':'Play';$('hold').setAttribute('aria-pressed',String(!!state[9]));
- $('now').textContent=tunes[state[1]].title;
- $('status').textContent=state[10]?'New track begins on the next bar.':(state[8]?(state[9]?'Holding this section':'Evolving through the score'):'Paused')+' · '+moodNames[state[0]]+' · '+['Solo','Duet','Trio'][state[12]]+' · Track '+state[6];
-}
-$('start').onclick=async()=>{
- $('start').disabled=true;$('start').textContent='Opening the instrument…';
- try{
-  if(context)await context.close();ready=false;
-  context=new AudioContext({sampleRate:44100});await context.resume();
-  if(context.sampleRate!==44100)throw new Error('This browser cannot run the instrument at its required audio rate. Please try Chrome or Safari.');
-  const url=URL.createObjectURL(new Blob([workletCode],{type:'text/javascript'}));
-  try{await context.audioWorklet.addModule(url);}finally{URL.revokeObjectURL(url);}
-  node=new AudioWorkletNode(context,'amb',{numberOfInputs:0,numberOfOutputs:1,outputChannelCount:[2]});
-  node.onprocessorerror=()=>{$('notice').textContent='The audio engine stopped. Reload this page to restart.';};
-  node.port.onmessage=e=>{if(e.data.type==='frame')frame(e.data);};
-  const wasm=Uint8Array.from(atob(wasm64),c=>c.charCodeAt(0));
-  startupTimer=setTimeout(()=>{if(!ready){$('notice').textContent='Audio has not started. Check your audio output, then try again or open this preview in another browser.';$('start').disabled=false;$('start').textContent='Try again';}},5000);
-  node.connect(context.destination);send({type:'load',wasm,store:stored,master:Math.round(4096*Number($('volume').value)/100),seed:1});
- }catch(error){$('notice').textContent=error.message;$('start').disabled=false;$('start').textContent='Try again';if(context)await context.close();}
-};
-$('volume').oninput=()=>send({type:'master',value:Math.round(4096*Number($('volume').value)/100)});
-$('mood').onchange=()=>{if(state)encoder(0,Number($('mood').value)-state[0])};
-$('source').onchange=()=>{if(state)encoder(2,Number($('source').value)-state[1])};
-$('page').onchange=()=>{if(state)encoder(1,$('page').selectedIndex-state[18]);};$('home').onclick=()=>tap(6);
-$('browse').onclick=()=>tap(1);$('browserBack').onclick=()=>tap(6);$('browserClose').onclick=()=>{for(let i=0;i<state[14];i++)tap(6);};
-$('play').onclick=()=>{context.resume();tap(10)};$('new').onclick=()=>tap(4);$('hold').onclick=()=>tap(11);$('save').onclick=()=>tap(7);$('guide').onclick=()=>tap(5);$('guideClose').onclick=()=>tap(6);$('guideNext').onclick=()=>tap(1);$('guidePrevious').onclick=()=>encoder(0,-1);
-macros.forEach((name,i)=>{
- const el=$(name);el.onpointerdown=()=>dragging.add(name);
- el.oninput=()=>{if(state){const next=Number(el.value);$(name+'Value').value=knobText(state[18],i,next);encoder(i+3,next-(pending[i]??state[19+i]));pending[i]=next;}};
- el.onchange=el.onpointerup=el.onpointercancel=()=>dragging.delete(name);
-});
+const portrait = '__SATIE_ART__';
+__SATIE_PLAYER__
 </script></body></html>
