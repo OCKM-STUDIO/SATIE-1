@@ -7,6 +7,7 @@
 By [OCKM Studio](https://github.com/OCKM-STUDIO).
 
 [Download the beta](https://github.com/OCKM-STUDIO/SATIE-1/releases/tag/v0.1.3-beta)
+· [Play in your browser](https://ockm-studio.github.io/SATIE-1/)
 · [Quick guide](satie/QUICK-START.txt)
 
 I've kept it simple: choose a tune, choose a mood, and let the music evolve while

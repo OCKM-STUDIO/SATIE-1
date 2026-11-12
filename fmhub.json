@@ -1,7 +1,10 @@
 {
   "what": "Erik. Evolved. Ten Satie pieces become an evolving electronic soundtrack in five moods. Choose a tune, set the pace and blend Solo, Duet or Trio. Shape each instrument, add vinyl colour and synced delay, or simply let it play. GLO opens the quick guide.",
   "author": "OCKM Studio",
-  "kinds": ["groove"],
+  "kinds": [
+    "groove"
+  ],
   "image": "satie/art/card.jpg",
-  "color": "#C9C8FF"
+  "color": "#C9C8FF",
+  "play": "https://ockm-studio.github.io/SATIE-1/"
 }
