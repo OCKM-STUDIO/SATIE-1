@@ -126,3 +126,5 @@ firmware, not affiliated with M-VAVE. Distributed without warranty.
 
 [Portal preparation and remaining steps](satie/SHARING.txt) ·
 [Original PERF-1 README](satie/UPSTREAM-PERF-1.md)
+
+You can also try SATIE-1 in the browser, no flashing needed, in the free community [FM-1 Emulator](https://fm1-emulator.atst.tools/).
